@@ -1,0 +1,12 @@
+{
+  "mesh_count": 2448,
+  "total_population": 3484334,
+  "total_elderly": 834590,
+  "desert_population": 735269,
+  "desert_elderly": 177922,
+  "high_risk_mesh_count": 629,
+  "desert_population_ratio": 21.1,
+  "desert_elderly_ratio": 21.3,
+  "station_count": 242,
+  "bus_stop_count": 3886
+}

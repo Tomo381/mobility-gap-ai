@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mobility Gap AI - 名古屋市 交通空白地帯・移動格差分析ダッシュボード</title>
+  
+  <!-- Leaflet CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  
+  <!-- PapaParse for CSV parsing -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      display: flex;
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+      color: #1e293b;
+      background: #f8fafc;
+    }
+    #sidebar {
+      width: 380px;
+      height: 100%;
+      background: #ffffff;
+      border-right: 1px solid #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 4px 0 16px rgba(0,0,0,0.06);
+      z-index: 1000;
+    }
+    .header {
+      padding: 18px 20px;
+      background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%);
+      color: #ffffff;
+    }
+    .header h1 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .header p {
+      font-size: 0.78rem;
+      color: #93c5fd;
+      margin-top: 4px;
+    }
+    .content {
+      padding: 16px 20px;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .section-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #64748b;
+      margin-bottom: 8px;
+      letter-spacing: 0.05em;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .kpi-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 10px 12px;
+      border-left: 4px solid #3b82f6;
+    }
+    .kpi-card.alert {
+      border-left-color: #ef4444;
+      background: #fef2f2;
+    }
+    .kpi-card.warning {
+      border-left-color: #f59e0b;
+      background: #fffbeb;
+    }
+    .kpi-title {
+      font-size: 0.72rem;
+      color: #64748b;
+      font-weight: 600;
+    }
+    .kpi-value {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #0f172a;
+      margin: 2px 0;
+    }
+    .kpi-sub {
+      font-size: 0.68rem;
+      color: #94a3b8;
+    }
+    .card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-bottom: 14px;
+    }
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.84rem;
+      cursor: pointer;
+      margin-bottom: 8px;
+      color: #334155;
+    }
+    .checkbox-label input[type="checkbox"] {
+      width: 15px;
+      height: 15px;
+      accent-color: #2563eb;
+      cursor: pointer;
+    }
+    .color-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      display: inline-block;
+    }
+    .notice-box {
+      font-size: 0.75rem;
+      background: #f1f5f9;
+      border-radius: 6px;
+      padding: 10px;
+      color: #475569;
+      line-height: 1.45;
+      margin-bottom: 14px;
+    }
+    #detail-panel {
+      font-size: 0.82rem;
+      display: none;
+      background: #f8fafc;
+      border-left: 3px solid #2563eb;
+    }
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 0;
+      border-bottom: 1px dashed #e2e8f0;
+    }
+    .detail-row:last-child {
+      border-bottom: none;
+    }
+    .detail-label {
+      color: #64748b;
+    }
+    .detail-val {
+      font-weight: 700;
+      color: #0f172a;
+    }
+    #map {
+      flex: 1;
+      height: 100%;
+      background: #f1f5f9;
+    }
+    /* 凡例 (Legend) */
+    .legend {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 12px 14px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      font-size: 0.78rem;
+      line-height: 1.6;
+      border: 1px solid #cbd5e1;
+      max-width: 220px;
+    }
+    .legend-title {
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: #0f172a;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 4px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .legend-box {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+    .badge {
+      display: inline-block;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 700;
+    }
+    .badge-red { background: #fee2e2; color: #991b1b; }
+    .badge-orange { background: #ffedd5; color: #9a3412; }
+    .badge-yellow { background: #fef9c3; color: #854d0e; }
+    .badge-green { background: #dcfce7; color: #166534; }
+  </style>
+</head>
+<body>
+
+  <!-- サイドバー -->
+  <div id="sidebar">
+    <div class="header">
+      <h1>Mobility Gap AI</h1>
+      <p>名古屋都市圏 交通空白地帯・移動格差分析</p>
+    </div>
+
+    <div class="content">
+      <!-- KPI サマリー -->
+      <div class="section-title">
+        <span>移動格差 分析サマリー</span>
+        <span id="load-badge" class="badge badge-green">データ読込中...</span>
+      </div>
+      <div class="kpi-grid">
+        <div class="kpi-card alert">
+          <div class="kpi-title">空白地帯の高齢者</div>
+          <div class="kpi-value" id="kpi-desert-elderly">177,922 人</div>
+          <div class="kpi-sub">名古屋圏の高齢者の 21.3%</div>
+        </div>
+        <div class="kpi-card alert">
+          <div class="kpi-title">深刻な高リスク地域</div>
+          <div class="kpi-value" id="kpi-high-risk">629 メッシュ</div>
+          <div class="kpi-sub">バス・駅共に800m以上離隔</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-title">公共交通網</div>
+          <div class="kpi-value" id="kpi-transit">3,886 / 242</div>
+          <div class="kpi-sub">バス停留所 / 鉄道駅</div>
+        </div>
+        <div class="kpi-card warning">
+          <div class="kpi-title">空白地帯の総人口</div>
+          <div class="kpi-value" id="kpi-desert-pop">735,269 人</div>
+          <div class="kpi-sub">全居住人口の 21.1%</div>
+        </div>
+      </div>
+
+      <!-- 選択中メッシュの詳細情報 -->
+      <div class="section-title">選択地点の詳細情報</div>
+      <div id="detail-card" class="card">
+        <div id="detail-empty" style="color: #94a3b8; font-size: 0.8rem; text-align: center; padding: 10px 0;">
+          地図上のメッシュまたはピンをクリックすると詳細が表示されます
+        </div>
+        <div id="detail-panel">
+          <div class="detail-row">
+            <span class="detail-label">対象:</span>
+            <span class="detail-val" id="det-title">-</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">リスク判定:</span>
+            <span class="detail-val" id="det-risk">-</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">総人口 / 高齢者:</span>
+            <span class="detail-val" id="det-pop">-</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">高齢化率:</span>
+            <span class="detail-val" id="det-aging">-</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">最寄りバス停距離:</span>
+            <span class="detail-val" id="det-bus">-</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">最寄り駅距離:</span>
+            <span class="detail-val" id="det-station">-</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Mobility Gap 指数:</span>
+            <span class="detail-val" style="color: #dc2626;" id="det-gapscore">-</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- レイヤー表示設定 -->
+      <div class="section-title">レイヤー表示・フィルタ</div>
+      <div class="card">
+        <label class="checkbox-label">
+          <input type="checkbox" id="layer-mesh" checked />
+          <span class="color-dot" style="background: #ef4444;"></span>
+          <strong>500mメッシュ 移動格差ヒートマップ</strong>
+        </label>
+        
+        <div style="margin-left: 22px; margin-bottom: 10px; font-size: 0.78rem;">
+          <label class="checkbox-label" style="margin-bottom: 4px;">
+            <input type="checkbox" id="filter-desert-only" />
+            <span>交通空白地帯（レベル2・3）のみ絞り込み</span>
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" id="filter-elderly-dense" />
+            <span>高齢者多住地域（50人以上）のみ絞り込み</span>
+          </label>
+        </div>
+
+        <label class="checkbox-label">
+          <input type="checkbox" id="layer-stations" checked />
+          <span class="color-dot" style="background: #10b981;"></span>
+          <span>鉄道駅 (242駅)</span>
+        </label>
+
+        <label class="checkbox-label">
+          <input type="checkbox" id="layer-bus-stops" />
+          <span class="color-dot" style="background: #3b82f6;"></span>
+          <span>バス停留所 (3,886箇所)</span>
+        </label>
+
+        <label class="checkbox-label">
+          <input type="checkbox" id="layer-station-buffer" checked />
+          <span class="color-dot" style="background: #a7f3d0; border: 1px solid #10b981;"></span>
+          <span>駅 徒歩10分圏バッファ (800m)</span>
+        </label>
+
+        <label class="checkbox-label">
+          <input type="checkbox" id="layer-bus-buffer" />
+          <span class="color-dot" style="background: #bfdbfe; border: 1px solid #3b82f6;"></span>
+          <span>バス停 徒歩5分圏バッファ (400m)</span>
+        </label>
+      </div>
+
+      <div class="notice-box">
+        💡 <strong>分析ロジック (Mobility Gap Index):</strong><br>
+        国勢調査の各500mメッシュから「最寄りバス停距離(m)」と「最寄り駅距離(m)」を測位し、公共交通アクセスの離隔度と65歳以上高齢者居住数を掛け合わせて算出した移動格差指標です。
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 地図領域 -->
+  <div id="map"></div>
+
+  <script>
+    // 1. 地図初期化
+    const map = L.map('map').setView([35.170, 136.920], 12);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 18,
+      attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a> | 国土数値情報 | 令和2年国勢調査'
+    }).addTo(map);
+
+    // レイヤーグループ
+    const meshLayer = L.layerGroup().addTo(map);
+    const stationLayer = L.layerGroup().addTo(map);
+    const stationBufferLayer = L.layerGroup().addTo(map);
+    const busStopLayer = L.layerGroup();
+    const busBufferLayer = L.layerGroup();
+
+    let allMeshFeatures = [];
+    let selectedLayer = null;
+
+    // リスクレベルに応じたカラー設定
+    function getMeshColor(level, elderly) {
+      if (level === 3) {
+        return elderly >= 100 ? '#7f1d1d' : '#dc2626'; // 深刻 (濃い赤)
+      } else if (level === 2) {
+        return '#f97316'; // 交通空白 (オレンジ)
+      } else if (level === 1) {
+        return '#facc15'; // 注意 (黄)
+      } else {
+        return '#94a3b8'; // 良好 (薄いグレー)
+      }
+    }
+
+    function getMeshOpacity(level) {
+      if (level === 3) return 0.65;
+      if (level === 2) return 0.50;
+      if (level === 1) return 0.35;
+      return 0.12;
+    }
+
+    // メッシュ描画更新
+    function renderMeshLayer() {
+      meshLayer.clearLayers();
+      const desertOnly = document.getElementById('filter-desert-only').checked;
+      const elderlyDense = document.getElementById('filter-elderly-dense').checked;
+
+      allMeshFeatures.forEach(feat => {
+        const p = feat.properties;
+        if (desertOnly && p.gap_level < 2) return;
+        if (elderlyDense && p.elderly < 50) return;
+
+        const coords = feat.geometry.coordinates[0].map(pt => [pt[1], pt[0]]);
+        const color = getMeshColor(p.gap_level, p.elderly);
+        const opacity = getMeshOpacity(p.gap_level);
+
+        const polygon = L.polygon(coords, {
+          color: color,
+          weight: 1,
+          fillColor: color,
+          fillOpacity: opacity
+        });
+
+        polygon.on('click', () => {
+          showMeshDetail(p);
+          if (selectedLayer) selectedLayer.setStyle({ weight: 1 });
+          polygon.setStyle({ weight: 3, color: '#000000' });
+          selectedLayer = polygon;
+        });
+
+        meshLayer.addLayer(polygon);
+      });
+    }
+
+    // メッシュ詳細表示
+    function showMeshDetail(p) {
+      document.getElementById('detail-empty').style.display = 'none';
+      const panel = document.getElementById('detail-panel');
+      panel.style.display = 'block';
+
+      document.getElementById('det-title').textContent = `500mメッシュ (${p.mesh_code})`;
+      
+      const riskEl = document.getElementById('det-risk');
+      riskEl.textContent = p.risk_label;
+      if (p.gap_level === 3) riskEl.style.color = '#dc2626';
+      else if (p.gap_level === 2) riskEl.style.color = '#ea580c';
+      else if (p.gap_level === 1) riskEl.style.color = '#ca8a04';
+      else riskEl.style.color = '#16a34a';
+
+      document.getElementById('det-pop').textContent = `${p.pop.toLocaleString()} 人 / ${p.elderly.toLocaleString()} 人`;
+      document.getElementById('det-aging').textContent = `${p.aging_rate}%`;
+      document.getElementById('det-bus').textContent = `${p.d_bus} m (${p.d_bus > 400 ? '徒歩5分超' : '徒歩圏'})`;
+      document.getElementById('det-station').textContent = `${p.d_station} m (${p.d_station > 800 ? '徒歩10分超' : '徒歩圏'})`;
+      document.getElementById('det-gapscore').textContent = p.gap_score.toLocaleString();
+    }
+
+    // 2. 鉄道駅データの読み込み
+    fetch('data/nagoya_stations.geojson')
+      .then(res => res.json())
+      .then(data => {
+        data.features.forEach(feat => {
+          const [lon, lat] = feat.geometry.coordinates;
+          const p = feat.properties;
+
+          // 駅マーカー
+          const marker = L.circleMarker([lat, lon], {
+            radius: 5,
+            fillColor: '#10b981',
+            color: '#064e3b',
+            weight: 1.5,
+            opacity: 1,
+            fillOpacity: 0.9
+          });
+
+          marker.bindPopup(`
+            <div style="font-size: 0.9rem;">
+              <strong>🚆 ${p.name}駅</strong><br/>
+              <span style="color:#64748b;">${p.line} (${p.operator})</span>
+            </div>
+          `);
+          stationLayer.addLayer(marker);
+
+          // 駅800mバッファ
+          const buffer = L.circle([lat, lon], {
+            radius: 800,
+            color: '#10b981',
+            weight: 1,
+            fillColor: '#a7f3d0',
+            fillOpacity: 0.08
+          });
+          stationBufferLayer.addLayer(buffer);
+        });
+      })
+      .catch(err => console.warn('駅データの読込待機:', err));
+
+    // 3. メッシュGeoJSONデータの読み込み
+    fetch('data/nagoya_mobility_gap_mesh.geojson')
+      .then(res => res.json())
+      .then(data => {
+        allMeshFeatures = data.features;
+        renderMeshLayer();
+        document.getElementById('load-badge').textContent = '分析データ読込完了';
+        document.getElementById('load-badge').className = 'badge badge-green';
+      })
+      .catch(err => {
+        console.warn('メッシュデータ読込エラー:', err);
+        document.getElementById('load-badge').textContent = '要ローカルサーバー';
+        document.getElementById('load-badge').className = 'badge badge-red';
+      });
+
+    // 4. サマリー指標の読み込み
+    fetch('data/summary_metrics.json')
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById('kpi-desert-elderly').textContent = data.desert_elderly.toLocaleString() + ' 人';
+        document.getElementById('kpi-high-risk').textContent = data.high_risk_mesh_count.toLocaleString() + ' 箇所';
+        document.getElementById('kpi-transit').textContent = `${data.bus_stop_count.toLocaleString()} / ${data.station_count}`;
+        document.getElementById('kpi-desert-pop').textContent = data.desert_population.toLocaleString() + ' 人';
+      })
+      .catch(err => console.warn('サマリー読込待機:', err));
+
+    // 5. バス停データの読み込み (オンデマンド読込)
+    let busLoaded = false;
+    function loadBusStops() {
+      if (busLoaded) return;
+      fetch('data/Nagoya_bus_stop.text')
+        .then(res => res.text())
+        .then(csv => {
+          Papa.parse(csv, {
+            header: true,
+            skipEmptyLines: true,
+            complete: results => {
+              results.data.forEach(stop => {
+                const lat = parseFloat(stop.stop_lat);
+                const lon = parseFloat(stop.stop_lon);
+                if (isNaN(lat) || isNaN(lon)) return;
+
+                const marker = L.circleMarker([lat, lon], {
+                  radius: 3,
+                  fillColor: '#2563eb',
+                  color: '#ffffff',
+                  weight: 0.8,
+                  fillOpacity: 0.8
+                });
+                marker.bindPopup(`<strong>🚏 ${stop.stop_name}</strong><br>のりば: ${stop.platform_code || '-'}`);
+                busStopLayer.addLayer(marker);
+
+                const circle = L.circle([lat, lon], {
+                  radius: 400,
+                  color: '#3b82f6',
+                  weight: 1,
+                  fillColor: '#bfdbfe',
+                  fillOpacity: 0.05
+                });
+                busBufferLayer.addLayer(circle);
+              });
+              busLoaded = true;
+            }
+          });
+        });
+    }
+
+    // イベントリスナー
+    document.getElementById('layer-mesh').addEventListener('change', e => {
+      if (e.target.checked) map.addLayer(meshLayer);
+      else map.removeLayer(meshLayer);
+    });
+    document.getElementById('layer-stations').addEventListener('change', e => {
+      if (e.target.checked) map.addLayer(stationLayer);
+      else map.removeLayer(stationLayer);
+    });
+    document.getElementById('layer-station-buffer').addEventListener('change', e => {
+      if (e.target.checked) map.addLayer(stationBufferLayer);
+      else map.removeLayer(stationBufferLayer);
+    });
+    document.getElementById('layer-bus-stops').addEventListener('change', e => {
+      if (e.target.checked) {
+        loadBusStops();
+        map.addLayer(busStopLayer);
+      } else {
+        map.removeLayer(busStopLayer);
+      }
+    });
+    document.getElementById('layer-bus-buffer').addEventListener('change', e => {
+      if (e.target.checked) {
+        loadBusStops();
+        map.addLayer(busBufferLayer);
+      } else {
+        map.removeLayer(busBufferLayer);
+      }
+    });
+
+    document.getElementById('filter-desert-only').addEventListener('change', renderMeshLayer);
+    document.getElementById('filter-elderly-dense').addEventListener('change', renderMeshLayer);
+
+    // 凡例コントロールの追加
+    const legend = L.control({ position: 'bottomright' });
+    legend.onAdd = function() {
+      const div = L.DomUtil.create('div', 'legend');
+      div.innerHTML = `
+        <div class="legend-title">移動格差・空白リスク</div>
+        <div class="legend-item"><div class="legend-box" style="background:#dc2626;"></div> 深刻 (バス・駅800m超)</div>
+        <div class="legend-item"><div class="legend-box" style="background:#f97316;"></div> 交通空白 (バス600〜800m)</div>
+        <div class="legend-item"><div class="legend-box" style="background:#facc15;"></div> 注意 (バス400〜600m)</div>
+        <div class="legend-item"><div class="legend-box" style="background:#94a3b8; opacity:0.4;"></div> アクセス良好</div>
+        <div style="border-top:1px solid #e2e8f0; margin:6px 0;"></div>
+        <div class="legend-item"><div class="legend-box" style="background:#10b981; border-radius:50%;"></div> 鉄道駅 (800m圏)</div>
+        <div class="legend-item"><div class="legend-box" style="background:#2563eb; border-radius:50%;"></div> バス停 (400m圏)</div>
+      `;
+      return div;
+    };
+    legend.addTo(map);
+  </script>
+</body>
+</html>
