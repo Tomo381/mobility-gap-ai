@@ -2,11 +2,24 @@
   "mesh_count": 2448,
   "total_population": 3484334,
   "total_elderly": 834590,
-  "desert_population": 735269,
-  "desert_elderly": 177922,
-  "high_risk_mesh_count": 629,
-  "desert_population_ratio": 21.1,
-  "desert_elderly_ratio": 21.3,
+  "level_counts": {
+    "1": 909,
+    "2": 571,
+    "3": 410,
+    "4": 370,
+    "5": 188
+  },
+  "level_elderly": {
+    "1": 324916,
+    "2": 229327,
+    "3": 122283,
+    "4": 95868,
+    "5": 62196
+  },
+  "critical_mesh_count": 188,
+  "critical_elderly": 62196,
+  "blank_mesh_count": 558,
+  "blank_elderly": 158064,
   "station_count": 242,
   "bus_stop_count": 3886
 }

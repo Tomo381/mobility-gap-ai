@@ -1,7 +1,7 @@
 """
 Mobility Gap AI - Data Processing Pipeline
 名古屋市エリアの公共交通データ（バス停・鉄道駅）と国勢調査500mメッシュ人口データを統合し、
-交通空白地帯および移動格差スコア（Mobility Gap Score）を算出する。
+交通空白地帯および移動格差スコア（Mobility Gap Score: MGS）を算出する。
 """
 
 import json
@@ -10,9 +10,6 @@ import os
 import pandas as pd
 import numpy as np
 
-# -------------------------------------------------------------
-# 1. 座標・メッシュコード変換関数 (JIS X 0410)
-# -------------------------------------------------------------
 def meshcode_to_bbox(code_str):
     """
     9桁の500mメッシュコード（4次メッシュ）から緯度経度バウンディングボックスを計算
@@ -41,17 +38,6 @@ def meshcode_to_bbox(code_str):
         lon_width /= 2.0
 
     return lat, lon, lat + lat_width, lon + lon_width
-
-def haversine_distance(lat1, lon1, lat2, lon2):
-    """
-    2点間の直線距離 (メートル) を計算
-    """
-    R = 6371000.0  # 地球の半径 (m)
-    phi1, phi2 = math.radians(lat1), math.radians(lat2)
-    dphi = math.radians(lat2 - lat1)
-    dlambda = math.radians(lon2 - lon1)
-    a = math.sin(dphi / 2.0)**2 + math.cos(phi1) * math.cos(phi2) * math.sin(dlambda / 2.0)**2
-    return 2.0 * R * math.atan2(math.sqrt(a), math.sqrt(1.0 - a))
 
 def main():
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -126,16 +112,13 @@ def main():
 
     print(f"抽出された名古屋エリアの鉄道駅数: {len(station_features)} 件")
     
-    # 鉄道駅GeoJSON保存
     station_out_file = os.path.join(data_dir, "nagoya_stations.geojson")
     with open(station_out_file, "w", encoding="utf-8") as f:
         json.dump({"type": "FeatureCollection", "features": station_features}, f, ensure_ascii=False)
-    print(f"保存完了: {station_out_file}")
 
     print("\n=== [Step 3] 国勢調査500mメッシュデータの読み込みと幾何生成 ===")
     mesh_pop_file = os.path.join(data_dir, "tblT001101H23.txt")
     
-    # カラム名取得
     with open(mesh_pop_file, "r", encoding="shift_jis") as f:
         col_names = next(f).strip().split(",")
     df_mesh = pd.read_csv(mesh_pop_file, encoding="shift_jis", skiprows=1, low_memory=False)
@@ -150,11 +133,10 @@ def main():
     
     total_area_pop = 0
     total_area_elderly = 0
-    total_desert_pop = 0
-    total_desert_elderly = 0
-    high_risk_count = 0
+    level_counts = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
+    level_elderly = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
 
-    print("メッシュごとの最寄り交通アクセス距離 & 移動格差スコア計算中...")
+    print("メッシュごとの最寄り交通アクセス距離 & 移動格差スコア(MGS)計算中...")
 
     for idx, row in df_mesh.iterrows():
         code = str(row["KEY_CODE"])
@@ -165,11 +147,9 @@ def main():
         c_lat = (min_lat + max_lat) / 2.0
         c_lon = (min_lon + max_lon) / 2.0
 
-        # 名古屋エリア判定
         if not (LAT_MIN <= c_lat <= LAT_MAX and LON_MIN <= c_lon <= LON_MAX):
             continue
 
-        # 人口抽出
         pop_raw = str(row.get("T001101001", "0"))
         elderly_raw = str(row.get("T001101019", "0"))
         elderly75_raw = str(row.get("T001101022", "0"))
@@ -179,15 +159,14 @@ def main():
         elderly75 = float(elderly75_raw) if elderly75_raw not in ["*", ""] else 0.0
 
         if pop == 0:
-            continue  # 人口ゼロのメッシュ（山林、海、工業専用地など）は除外
+            continue  # 人口ゼロメッシュ除外
 
-        # 最寄りバス停距離 (メートル)
-        # 簡易ユークリッド平面近似による高速計算: 1度 ≈ 111km (lat), 1度 ≈ 91km (lon at 35N)
+        # 最寄りバス停距離 (m)
         d_lat_bus = (bus_lats - c_lat) * 111000.0
         d_lon_bus = (bus_lons - c_lon) * 91000.0
         min_d_bus = float(np.min(np.sqrt(d_lat_bus**2 + d_lon_bus**2)))
 
-        # 最寄り駅距離 (メートル)
+        # 最寄り駅距離 (m)
         if len(st_lats) > 0:
             d_lat_st = (st_lats - c_lat) * 111000.0
             d_lon_st = (st_lons - c_lon) * 91000.0
@@ -195,49 +174,53 @@ def main():
         else:
             min_d_station = 99999.0
 
-        # Mobility Gap 判定基準:
-        # ・バス停から徒歩5分(約400m)超
-        # ・駅から徒歩10分(約800m)超
-        is_bus_desert = (min_d_bus > 400.0)
-        is_station_desert = (min_d_station > 800.0)
-        is_transit_desert = is_bus_desert and is_station_desert
-
         # 高齢化率 (%)
         aging_rate = round((elderly / pop * 100.0), 1) if pop > 0 else 0.0
 
-        # リスクレベル分類 (0〜3)
-        # 0: 良好 (バス停400m以内 または 駅800m以内)
-        # 1: やや不便 (バス停400〜600m、駅800m超)
-        # 2: 交通空白地帯 (バス停600〜800m、駅800m超)
-        # 3: 高リスク移動困難地帯 (バス停800m超[徒歩10分以上]、駅800m超、かつ高齢者が一定数居住)
-        if not is_transit_desert:
-            gap_level = 0
-            risk_label = "アクセス良好"
+        # -------------------------------------------------------------
+        # 【Mobility Gap Score: MGS 算出式】
+        # MGS = 高齢者人口 × (バス離隔ペナルティ) × (鉄道駅離隔ペナルティ)
+        # ・バス離隔ペナルティ = 最寄りバス停距離(m) ÷ 400m（徒歩5分基準）
+        # ・鉄道駅離隔ペナルティ = 最寄り駅距離(m) ÷ 800m（徒歩10分基準）
+        # -------------------------------------------------------------
+        bus_penalty = round(min_d_bus / 400.0, 3)
+        station_penalty = round(min_d_station / 800.0, 3)
+        gap_score = round(elderly * bus_penalty * station_penalty, 1)
+
+        # -------------------------------------------------------------
+        # 【5段階リスクレベル分類（深刻度の低い順: 青 → 黄緑 → 黄 → 橙 → 赤）】
+        # Level 1: 青 (MGS < 200) - 移動格差なし・交通至便
+        # Level 2: 黄緑 (200 <= MGS < 600) - 良好・軽微な離隔
+        # Level 3: 黄色 (600 <= MGS < 1,500) - 注意・交通不便エリア
+        # Level 4: 橙色 (1,500 <= MGS < 4,000) - 交通空白地帯（要改善）
+        # Level 5: 赤色 (MGS >= 4,000) - 深刻な交通空白地帯（最優先対策・基準引き上げ）
+        # -------------------------------------------------------------
+        if gap_score >= 4000.0:
+            gap_level = 5
+            risk_label = "深刻（最優先対策）"
+            color = "#dc2626"  # 赤
+        elif gap_score >= 1500.0:
+            gap_level = 4
+            risk_label = "交通空白地帯（要改善）"
+            color = "#f97316"  # 橙
+        elif gap_score >= 600.0:
+            gap_level = 3
+            risk_label = "注意（交通不便）"
+            color = "#eab308"  # 黄
+        elif gap_score >= 200.0:
+            gap_level = 2
+            risk_label = "良好（軽微）"
+            color = "#22c55e"  # 黄緑
         else:
-            if min_d_bus <= 600.0:
-                gap_level = 1
-                risk_label = "注意（バス停400〜600m）"
-            elif min_d_bus <= 800.0:
-                gap_level = 2
-                risk_label = "交通空白（バス停600〜800m）"
-            else:
-                gap_level = 3
-                risk_label = "深刻な交通空白地帯（バス・駅共に800m以上）"
-                if elderly >= 50:
-                    high_risk_count += 1
+            gap_level = 1
+            risk_label = "極めて良好（至便）"
+            color = "#2563eb"  # 青
 
-        # 移動格差指数 (Mobility Gap Score)
-        # 高齢者人口 × 交通距離係数
-        dist_factor = (min_d_bus / 400.0) * (min_d_station / 800.0)
-        gap_score = round(elderly * dist_factor, 1)
-
+        level_counts[gap_level] += 1
+        level_elderly[gap_level] += int(elderly)
         total_area_pop += pop
         total_area_elderly += elderly
-        if is_transit_desert:
-            total_desert_pop += pop
-            total_desert_elderly += elderly
 
-        # ポリゴン頂点 (反時計回り)
         polygon_coords = [[
             [round(min_lon, 6), round(min_lat, 6)],
             [round(max_lon, 6), round(min_lat, 6)],
@@ -260,41 +243,44 @@ def main():
                 "aging_rate": aging_rate,
                 "d_bus": int(min_d_bus),
                 "d_station": int(min_d_station),
-                "is_desert": is_transit_desert,
+                "bus_penalty": bus_penalty,
+                "station_penalty": station_penalty,
+                "gap_score": gap_score,
                 "gap_level": gap_level,
                 "risk_label": risk_label,
-                "gap_score": gap_score
+                "color": color
             }
         })
 
     print(f"有効居住メッシュ数: {len(mesh_features)} 件")
-    print(f"対象地域総人口: {int(total_area_pop):,} 人 (うち65歳以上: {int(total_area_elderly):,} 人)")
-    print(f"交通空白地帯の人口: {int(total_desert_pop):,} 人 (うち65歳以上: {int(total_desert_elderly):,} 人)")
-    print(f"深刻な高リスクメッシュ数: {high_risk_count} 箇所")
+    print(f"5段階分類結果:")
+    print(f"  Level 1 (青 / 極めて良好): {level_counts[1]} 件 (高齢者: {level_elderly[1]:,} 人)")
+    print(f"  Level 2 (黄緑 / 良好):    {level_counts[2]} 件 (高齢者: {level_elderly[2]:,} 人)")
+    print(f"  Level 3 (黄色 / 注意):    {level_counts[3]} 件 (高齢者: {level_elderly[3]:,} 人)")
+    print(f"  Level 4 (橙色 / 空白):    {level_counts[4]} 件 (高齢者: {level_elderly[4]:,} 人)")
+    print(f"  Level 5 (赤色 / 深刻):    {level_counts[5]} 件 (高齢者: {level_elderly[5]:,} 人)")
 
-    # メッシュGeoJSON保存
     mesh_out_file = os.path.join(data_dir, "nagoya_mobility_gap_mesh.geojson")
     with open(mesh_out_file, "w", encoding="utf-8") as f:
         json.dump({"type": "FeatureCollection", "features": mesh_features}, f, ensure_ascii=False)
-    print(f"保存完了: {mesh_out_file}")
 
-    # サマリー指標保存
     summary_data = {
         "mesh_count": len(mesh_features),
         "total_population": int(total_area_pop),
         "total_elderly": int(total_area_elderly),
-        "desert_population": int(total_desert_pop),
-        "desert_elderly": int(total_desert_elderly),
-        "high_risk_mesh_count": high_risk_count,
-        "desert_population_ratio": round(total_desert_pop / total_area_pop * 100, 1) if total_area_pop > 0 else 0,
-        "desert_elderly_ratio": round(total_desert_elderly / total_area_elderly * 100, 1) if total_area_elderly > 0 else 0,
+        "level_counts": level_counts,
+        "level_elderly": level_elderly,
+        "critical_mesh_count": level_counts[5],
+        "critical_elderly": level_elderly[5],
+        "blank_mesh_count": level_counts[4] + level_counts[5],
+        "blank_elderly": level_elderly[4] + level_elderly[5],
         "station_count": len(station_features),
         "bus_stop_count": len(bus_stops)
     }
     summary_file = os.path.join(data_dir, "summary_metrics.json")
     with open(summary_file, "w", encoding="utf-8") as f:
         json.dump(summary_data, f, ensure_ascii=False, indent=2)
-    print(f"サマリー保存完了: {summary_file}")
+
     print("\n[SUCCESS] すべての前処理が完了しました！")
 
 if __name__ == "__main__":

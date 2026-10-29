@@ -28,7 +28,7 @@
       background: #f8fafc;
     }
     #sidebar {
-      width: 380px;
+      width: 390px;
       height: 100%;
       background: #ffffff;
       border-right: 1px solid #e2e8f0;
@@ -38,34 +38,31 @@
       z-index: 1000;
     }
     .header {
-      padding: 18px 20px;
+      padding: 16px 20px;
       background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%);
       color: #ffffff;
     }
     .header h1 {
-      font-size: 1.2rem;
+      font-size: 1.18rem;
       font-weight: 700;
       letter-spacing: -0.01em;
-      display: flex;
-      align-items: center;
-      gap: 8px;
     }
     .header p {
-      font-size: 0.78rem;
+      font-size: 0.76rem;
       color: #93c5fd;
-      margin-top: 4px;
+      margin-top: 3px;
     }
     .content {
-      padding: 16px 20px;
+      padding: 14px 18px;
       overflow-y: auto;
       flex: 1;
     }
     .section-title {
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       font-weight: 700;
       text-transform: uppercase;
       color: #64748b;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
       letter-spacing: 0.05em;
       display: flex;
       justify-content: space-between;
@@ -74,81 +71,85 @@
     .kpi-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-bottom: 16px;
+      gap: 8px;
+      margin-bottom: 12px;
     }
     .kpi-card {
       background: #f8fafc;
       border: 1px solid #e2e8f0;
       border-radius: 8px;
-      padding: 10px 12px;
+      padding: 8px 10px;
       border-left: 4px solid #3b82f6;
     }
-    .kpi-card.alert {
-      border-left-color: #ef4444;
+    .kpi-card.critical {
+      border-left-color: #dc2626;
       background: #fef2f2;
     }
-    .kpi-card.warning {
-      border-left-color: #f59e0b;
-      background: #fffbeb;
+    .kpi-card.blank {
+      border-left-color: #f97316;
+      background: #fff7ed;
     }
     .kpi-title {
-      font-size: 0.72rem;
+      font-size: 0.7rem;
       color: #64748b;
       font-weight: 600;
     }
     .kpi-value {
-      font-size: 1.15rem;
+      font-size: 1.1rem;
       font-weight: 800;
       color: #0f172a;
       margin: 2px 0;
     }
     .kpi-sub {
-      font-size: 0.68rem;
+      font-size: 0.65rem;
       color: #94a3b8;
     }
     .card {
       background: #ffffff;
       border: 1px solid #e2e8f0;
       border-radius: 8px;
-      padding: 12px 14px;
-      margin-bottom: 14px;
+      padding: 10px 12px;
+      margin-bottom: 12px;
     }
-    .checkbox-label {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 0.84rem;
-      cursor: pointer;
-      margin-bottom: 8px;
-      color: #334155;
-    }
-    .checkbox-label input[type="checkbox"] {
-      width: 15px;
-      height: 15px;
-      accent-color: #2563eb;
-      cursor: pointer;
-    }
-    .color-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 2px;
-      display: inline-block;
-    }
-    .notice-box {
-      font-size: 0.75rem;
-      background: #f1f5f9;
+    /* 計算式ボックス */
+    .formula-box {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-left: 4px solid #2563eb;
       border-radius: 6px;
       padding: 10px;
-      color: #475569;
+      margin-bottom: 12px;
+      font-size: 0.75rem;
       line-height: 1.45;
-      margin-bottom: 14px;
     }
+    .formula-title {
+      font-weight: 700;
+      color: #1e3a8a;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .formula-code {
+      background: #1e293b;
+      color: #f8fafc;
+      padding: 6px 8px;
+      border-radius: 4px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.72rem;
+      margin: 4px 0;
+      display: block;
+      overflow-x: auto;
+    }
+    .formula-desc {
+      color: #64748b;
+      font-size: 0.68rem;
+      line-height: 1.35;
+    }
+    /* 詳細パネル */
     #detail-panel {
-      font-size: 0.82rem;
+      font-size: 0.8rem;
       display: none;
-      background: #f8fafc;
-      border-left: 3px solid #2563eb;
     }
     .detail-row {
       display: flex;
@@ -166,33 +167,67 @@
       font-weight: 700;
       color: #0f172a;
     }
+    .breakdown-box {
+      background: #f1f5f9;
+      border-radius: 6px;
+      padding: 8px;
+      margin-top: 8px;
+      font-size: 0.72rem;
+    }
+    .breakdown-title {
+      font-weight: 700;
+      color: #334155;
+      margin-bottom: 4px;
+    }
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.82rem;
+      cursor: pointer;
+      margin-bottom: 6px;
+      color: #334155;
+    }
+    .checkbox-label input[type="checkbox"], .checkbox-label input[type="radio"] {
+      width: 15px;
+      height: 15px;
+      accent-color: #2563eb;
+      cursor: pointer;
+    }
+    .color-dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 3px;
+      display: inline-block;
+    }
     #map {
       flex: 1;
       height: 100%;
       background: #f1f5f9;
     }
-    /* 凡例 (Legend) */
+    /* 凡例 */
     .legend {
-      background: rgba(255, 255, 255, 0.95);
-      padding: 12px 14px;
+      background: rgba(255, 255, 255, 0.96);
+      padding: 10px 14px;
       border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      font-size: 0.78rem;
-      line-height: 1.6;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+      font-size: 0.75rem;
+      line-height: 1.55;
       border: 1px solid #cbd5e1;
-      max-width: 220px;
+      min-width: 200px;
     }
     .legend-title {
       font-weight: 700;
-      margin-bottom: 6px;
+      margin-bottom: 5px;
       color: #0f172a;
       border-bottom: 1px solid #e2e8f0;
-      padding-bottom: 4px;
+      padding-bottom: 3px;
     }
     .legend-item {
       display: flex;
       align-items: center;
       gap: 8px;
+      margin-bottom: 2px;
     }
     .legend-box {
       width: 14px;
@@ -204,13 +239,11 @@
       display: inline-block;
       padding: 1px 6px;
       border-radius: 4px;
-      font-size: 0.7rem;
+      font-size: 0.68rem;
       font-weight: 700;
     }
-    .badge-red { background: #fee2e2; color: #991b1b; }
-    .badge-orange { background: #ffedd5; color: #9a3412; }
-    .badge-yellow { background: #fef9c3; color: #854d0e; }
     .badge-green { background: #dcfce7; color: #166534; }
+    .badge-red { background: #fee2e2; color: #991b1b; }
   </style>
 </head>
 <body>
@@ -219,43 +252,54 @@
   <div id="sidebar">
     <div class="header">
       <h1>Mobility Gap AI</h1>
-      <p>名古屋都市圏 交通空白地帯・移動格差分析</p>
+      <p>名古屋都市圏 移動格差・交通アクセシビリティ分析</p>
     </div>
 
     <div class="content">
       <!-- KPI サマリー -->
       <div class="section-title">
-        <span>移動格差 分析サマリー</span>
+        <span>分析サマリー</span>
         <span id="load-badge" class="badge badge-green">データ読込中...</span>
       </div>
       <div class="kpi-grid">
-        <div class="kpi-card alert">
-          <div class="kpi-title">空白地帯の高齢者</div>
-          <div class="kpi-value" id="kpi-desert-elderly">177,922 人</div>
-          <div class="kpi-sub">名古屋圏の高齢者の 21.3%</div>
+        <div class="kpi-card critical">
+          <div class="kpi-title">深刻（最優先対策）</div>
+          <div class="kpi-value" id="kpi-critical-mesh">188 箇所</div>
+          <div class="kpi-sub">高齢者 <span id="kpi-critical-elderly">62,196</span> 人</div>
         </div>
-        <div class="kpi-card alert">
-          <div class="kpi-title">深刻な高リスク地域</div>
-          <div class="kpi-value" id="kpi-high-risk">629 メッシュ</div>
-          <div class="kpi-sub">バス・駅共に800m以上離隔</div>
+        <div class="kpi-card blank">
+          <div class="kpi-title">交通空白（要改善）</div>
+          <div class="kpi-value" id="kpi-blank-mesh">558 箇所</div>
+          <div class="kpi-sub">深刻・空白エリア計</div>
         </div>
         <div class="kpi-card">
           <div class="kpi-title">公共交通網</div>
           <div class="kpi-value" id="kpi-transit">3,886 / 242</div>
           <div class="kpi-sub">バス停留所 / 鉄道駅</div>
         </div>
-        <div class="kpi-card warning">
-          <div class="kpi-title">空白地帯の総人口</div>
-          <div class="kpi-value" id="kpi-desert-pop">735,269 人</div>
-          <div class="kpi-sub">全居住人口の 21.1%</div>
+        <div class="kpi-card">
+          <div class="kpi-title">対象地域 人口</div>
+          <div class="kpi-value" id="kpi-pop">3,484,334</div>
+          <div class="kpi-sub">うち65歳以上 834,590人</div>
+        </div>
+      </div>
+
+      <!-- 計算式明記ボックス -->
+      <div class="formula-box">
+        <div class="formula-title">📐 Mobility Gap 指数 (MGS) 算出式</div>
+        <code class="formula-code">MGS = 高齢者人口 × (d_bus ÷ 400) × (d_station ÷ 800)</code>
+        <div class="formula-desc">
+          ・<strong>d_bus</strong>: 最寄りバス停距離 (m) [基準徒歩圏: 400m / 徒歩5分]<br>
+          ・<strong>d_station</strong>: 最寄り駅距離 (m) [基準徒歩圏: 800m / 徒歩10分]<br>
+          ・<strong>高齢者人口</strong>: 各500mメッシュ内の65歳以上人口（国勢調査）
         </div>
       </div>
 
       <!-- 選択中メッシュの詳細情報 -->
       <div class="section-title">選択地点の詳細情報</div>
       <div id="detail-card" class="card">
-        <div id="detail-empty" style="color: #94a3b8; font-size: 0.8rem; text-align: center; padding: 10px 0;">
-          地図上のメッシュまたはピンをクリックすると詳細が表示されます
+        <div id="detail-empty" style="color: #94a3b8; font-size: 0.78rem; text-align: center; padding: 12px 0;">
+          地図上のメッシュまたは駅をクリックしてください
         </div>
         <div id="detail-panel">
           <div class="detail-row">
@@ -263,11 +307,11 @@
             <span class="detail-val" id="det-title">-</span>
           </div>
           <div class="detail-row">
-            <span class="detail-label">リスク判定:</span>
+            <span class="detail-label">深刻度区分:</span>
             <span class="detail-val" id="det-risk">-</span>
           </div>
           <div class="detail-row">
-            <span class="detail-label">総人口 / 高齢者:</span>
+            <span class="detail-label">総人口 / 高齢者数:</span>
             <span class="detail-val" id="det-pop">-</span>
           </div>
           <div class="detail-row">
@@ -284,59 +328,67 @@
           </div>
           <div class="detail-row">
             <span class="detail-label">Mobility Gap 指数:</span>
-            <span class="detail-val" style="color: #dc2626;" id="det-gapscore">-</span>
+            <span class="detail-val" id="det-gapscore" style="font-size: 1.05rem;">-</span>
+          </div>
+          <!-- 計算内訳ボックス -->
+          <div class="breakdown-box">
+            <div class="breakdown-title">【計算内訳】</div>
+            <div id="det-breakdown" style="color: #475569; line-height: 1.4;">-</div>
           </div>
         </div>
       </div>
 
+      <!-- フィルタ設定 -->
+      <div class="section-title">絞り込みフィルター</div>
+      <div class="card">
+        <label class="checkbox-label">
+          <input type="radio" name="level-filter" value="all" checked />
+          <span>全メッシュ表示 (2,448件)</span>
+        </label>
+        <label class="checkbox-label">
+          <input type="radio" name="level-filter" value="critical-only" />
+          <span class="color-dot" style="background: #dc2626;"></span>
+          <strong>深刻（赤）のみ抽出 [最優先対策]</strong>
+        </label>
+        <label class="checkbox-label">
+          <input type="radio" name="level-filter" value="blank-only" />
+          <span class="color-dot" style="background: #f97316;"></span>
+          <span>交通空白（橙・赤）のみ抽出</span>
+        </label>
+        <div style="border-top: 1px dashed #e2e8f0; margin: 6px 0;"></div>
+        <label class="checkbox-label">
+          <input type="checkbox" id="filter-elderly-dense" />
+          <span>高齢者100人以上のメッシュに限定</span>
+        </label>
+      </div>
+
       <!-- レイヤー表示設定 -->
-      <div class="section-title">レイヤー表示・フィルタ</div>
+      <div class="section-title">レイヤー表示</div>
       <div class="card">
         <label class="checkbox-label">
           <input type="checkbox" id="layer-mesh" checked />
-          <span class="color-dot" style="background: #ef4444;"></span>
-          <strong>500mメッシュ 移動格差ヒートマップ</strong>
+          <span>500mメッシュ 移動格差ヒートマップ</span>
         </label>
-        
-        <div style="margin-left: 22px; margin-bottom: 10px; font-size: 0.78rem;">
-          <label class="checkbox-label" style="margin-bottom: 4px;">
-            <input type="checkbox" id="filter-desert-only" />
-            <span>交通空白地帯（レベル2・3）のみ絞り込み</span>
-          </label>
-          <label class="checkbox-label">
-            <input type="checkbox" id="filter-elderly-dense" />
-            <span>高齢者多住地域（50人以上）のみ絞り込み</span>
-          </label>
-        </div>
-
         <label class="checkbox-label">
           <input type="checkbox" id="layer-stations" checked />
-          <span class="color-dot" style="background: #10b981;"></span>
+          <span class="color-dot" style="background: #059669;"></span>
           <span>鉄道駅 (242駅)</span>
         </label>
-
+        <label class="checkbox-label">
+          <input type="checkbox" id="layer-station-buffer" checked />
+          <span class="color-dot" style="background: #a7f3d0; border: 1px solid #059669;"></span>
+          <span>駅 徒歩10分圏バッファ (800m)</span>
+        </label>
         <label class="checkbox-label">
           <input type="checkbox" id="layer-bus-stops" />
           <span class="color-dot" style="background: #3b82f6;"></span>
           <span>バス停留所 (3,886箇所)</span>
         </label>
-
-        <label class="checkbox-label">
-          <input type="checkbox" id="layer-station-buffer" checked />
-          <span class="color-dot" style="background: #a7f3d0; border: 1px solid #10b981;"></span>
-          <span>駅 徒歩10分圏バッファ (800m)</span>
-        </label>
-
         <label class="checkbox-label">
           <input type="checkbox" id="layer-bus-buffer" />
           <span class="color-dot" style="background: #bfdbfe; border: 1px solid #3b82f6;"></span>
           <span>バス停 徒歩5分圏バッファ (400m)</span>
         </label>
-      </div>
-
-      <div class="notice-box">
-        💡 <strong>分析ロジック (Mobility Gap Index):</strong><br>
-        国勢調査の各500mメッシュから「最寄りバス停距離(m)」と「最寄り駅距離(m)」を測位し、公共交通アクセスの離隔度と65歳以上高齢者居住数を掛け合わせて算出した移動格差指標です。
       </div>
 
     </div>
@@ -362,42 +414,42 @@
     const busBufferLayer = L.layerGroup();
 
     let allMeshFeatures = [];
-    let selectedLayer = null;
+    let selectedPolygon = null;
 
-    // リスクレベルに応じたカラー設定
-    function getMeshColor(level, elderly) {
-      if (level === 3) {
-        return elderly >= 100 ? '#7f1d1d' : '#dc2626'; // 深刻 (濃い赤)
-      } else if (level === 2) {
-        return '#f97316'; // 交通空白 (オレンジ)
-      } else if (level === 1) {
-        return '#facc15'; // 注意 (黄)
-      } else {
-        return '#94a3b8'; // 良好 (薄いグレー)
-      }
-    }
+    // 5段階カラー定義（深刻度が低い順: 青 → 黄緑 → 黄色 → 橙 → 赤）
+    const LEVEL_COLORS = {
+      1: '#2563eb', // 青 (極めて良好)
+      2: '#22c55e', // 黄緑 (良好・軽微)
+      3: '#eab308', // 黄色 (注意・不便)
+      4: '#f97316', // 橙色 (交通空白)
+      5: '#dc2626'  // 赤色 (深刻・最優先対策)
+    };
 
-    function getMeshOpacity(level) {
-      if (level === 3) return 0.65;
-      if (level === 2) return 0.50;
-      if (level === 1) return 0.35;
-      return 0.12;
-    }
+    const LEVEL_OPACITIES = {
+      1: 0.22,
+      2: 0.35,
+      3: 0.48,
+      4: 0.60,
+      5: 0.75
+    };
 
     // メッシュ描画更新
     function renderMeshLayer() {
       meshLayer.clearLayers();
-      const desertOnly = document.getElementById('filter-desert-only').checked;
+      const filterRadio = document.querySelector('input[name="level-filter"]:checked').value;
       const elderlyDense = document.getElementById('filter-elderly-dense').checked;
 
       allMeshFeatures.forEach(feat => {
         const p = feat.properties;
-        if (desertOnly && p.gap_level < 2) return;
-        if (elderlyDense && p.elderly < 50) return;
+        
+        // フィルタ判定
+        if (filterRadio === 'critical-only' && p.gap_level < 5) return;
+        if (filterRadio === 'blank-only' && p.gap_level < 4) return;
+        if (elderlyDense && p.elderly < 100) return;
 
         const coords = feat.geometry.coordinates[0].map(pt => [pt[1], pt[0]]);
-        const color = getMeshColor(p.gap_level, p.elderly);
-        const opacity = getMeshOpacity(p.gap_level);
+        const color = LEVEL_COLORS[p.gap_level] || '#94a3b8';
+        const opacity = LEVEL_OPACITIES[p.gap_level] || 0.3;
 
         const polygon = L.polygon(coords, {
           color: color,
@@ -408,9 +460,9 @@
 
         polygon.on('click', () => {
           showMeshDetail(p);
-          if (selectedLayer) selectedLayer.setStyle({ weight: 1 });
+          if (selectedPolygon) selectedPolygon.setStyle({ weight: 1 });
           polygon.setStyle({ weight: 3, color: '#000000' });
-          selectedLayer = polygon;
+          selectedPolygon = polygon;
         });
 
         meshLayer.addLayer(polygon);
@@ -427,16 +479,25 @@
       
       const riskEl = document.getElementById('det-risk');
       riskEl.textContent = p.risk_label;
-      if (p.gap_level === 3) riskEl.style.color = '#dc2626';
-      else if (p.gap_level === 2) riskEl.style.color = '#ea580c';
-      else if (p.gap_level === 1) riskEl.style.color = '#ca8a04';
-      else riskEl.style.color = '#16a34a';
+      riskEl.style.color = LEVEL_COLORS[p.gap_level] || '#0f172a';
 
       document.getElementById('det-pop').textContent = `${p.pop.toLocaleString()} 人 / ${p.elderly.toLocaleString()} 人`;
       document.getElementById('det-aging').textContent = `${p.aging_rate}%`;
       document.getElementById('det-bus').textContent = `${p.d_bus} m (${p.d_bus > 400 ? '徒歩5分超' : '徒歩圏'})`;
       document.getElementById('det-station').textContent = `${p.d_station} m (${p.d_station > 800 ? '徒歩10分超' : '徒歩圏'})`;
-      document.getElementById('det-gapscore').textContent = p.gap_score.toLocaleString();
+      
+      const scoreEl = document.getElementById('det-gapscore');
+      scoreEl.textContent = p.gap_score.toLocaleString();
+      scoreEl.style.color = LEVEL_COLORS[p.gap_level];
+
+      // 内訳の明記
+      const breakdownEl = document.getElementById('det-breakdown');
+      breakdownEl.innerHTML = `
+        高齢者 <strong>${p.elderly}人</strong><br>
+        × バス離隔係数: <strong>${p.bus_penalty}</strong> (${p.d_bus}m ÷ 400m)<br>
+        × 駅離隔係数: <strong>${p.station_penalty}</strong> (${p.d_station}m ÷ 800m)<br>
+        ＝ <strong>${p.gap_score.toLocaleString()}</strong>
+      `;
     }
 
     // 2. 鉄道駅データの読み込み
@@ -447,10 +508,9 @@
           const [lon, lat] = feat.geometry.coordinates;
           const p = feat.properties;
 
-          // 駅マーカー
           const marker = L.circleMarker([lat, lon], {
             radius: 5,
-            fillColor: '#10b981',
+            fillColor: '#059669',
             color: '#064e3b',
             weight: 1.5,
             opacity: 1,
@@ -465,10 +525,9 @@
           `);
           stationLayer.addLayer(marker);
 
-          // 駅800mバッファ
           const buffer = L.circle([lat, lon], {
             radius: 800,
-            color: '#10b981',
+            color: '#059669',
             weight: 1,
             fillColor: '#a7f3d0',
             fillOpacity: 0.08
@@ -476,7 +535,7 @@
           stationBufferLayer.addLayer(buffer);
         });
       })
-      .catch(err => console.warn('駅データの読込待機:', err));
+      .catch(err => console.warn('駅データ読込待機:', err));
 
     // 3. メッシュGeoJSONデータの読み込み
     fetch('data/nagoya_mobility_gap_mesh.geojson')
@@ -484,7 +543,7 @@
       .then(data => {
         allMeshFeatures = data.features;
         renderMeshLayer();
-        document.getElementById('load-badge').textContent = '分析データ読込完了';
+        document.getElementById('load-badge').textContent = 'データ反映完了';
         document.getElementById('load-badge').className = 'badge badge-green';
       })
       .catch(err => {
@@ -497,14 +556,15 @@
     fetch('data/summary_metrics.json')
       .then(res => res.json())
       .then(data => {
-        document.getElementById('kpi-desert-elderly').textContent = data.desert_elderly.toLocaleString() + ' 人';
-        document.getElementById('kpi-high-risk').textContent = data.high_risk_mesh_count.toLocaleString() + ' 箇所';
+        document.getElementById('kpi-critical-mesh').textContent = `${data.critical_mesh_count} 箇所`;
+        document.getElementById('kpi-critical-elderly').textContent = data.critical_elderly.toLocaleString();
+        document.getElementById('kpi-blank-mesh').textContent = `${data.blank_mesh_count} 箇所`;
         document.getElementById('kpi-transit').textContent = `${data.bus_stop_count.toLocaleString()} / ${data.station_count}`;
-        document.getElementById('kpi-desert-pop').textContent = data.desert_population.toLocaleString() + ' 人';
+        document.getElementById('kpi-pop').textContent = `${data.total_population.toLocaleString()} 人`;
       })
       .catch(err => console.warn('サマリー読込待機:', err));
 
-    // 5. バス停データの読み込み (オンデマンド読込)
+    // 5. バス停データのオンデマンド読み込み
     let busLoaded = false;
     function loadBusStops() {
       if (busLoaded) return;
@@ -545,7 +605,7 @@
         });
     }
 
-    // イベントリスナー
+    // レイヤーイベント
     document.getElementById('layer-mesh').addEventListener('change', e => {
       if (e.target.checked) map.addLayer(meshLayer);
       else map.removeLayer(meshLayer);
@@ -575,21 +635,25 @@
       }
     });
 
-    document.getElementById('filter-desert-only').addEventListener('change', renderMeshLayer);
+    // フィルタ切り替えイベント
+    document.querySelectorAll('input[name="level-filter"]').forEach(radio => {
+      radio.addEventListener('change', renderMeshLayer);
+    });
     document.getElementById('filter-elderly-dense').addEventListener('change', renderMeshLayer);
 
-    // 凡例コントロールの追加
+    // 凡例 (5段階グラデーション)
     const legend = L.control({ position: 'bottomright' });
     legend.onAdd = function() {
       const div = L.DomUtil.create('div', 'legend');
       div.innerHTML = `
-        <div class="legend-title">移動格差・空白リスク</div>
-        <div class="legend-item"><div class="legend-box" style="background:#dc2626;"></div> 深刻 (バス・駅800m超)</div>
-        <div class="legend-item"><div class="legend-box" style="background:#f97316;"></div> 交通空白 (バス600〜800m)</div>
-        <div class="legend-item"><div class="legend-box" style="background:#facc15;"></div> 注意 (バス400〜600m)</div>
-        <div class="legend-item"><div class="legend-box" style="background:#94a3b8; opacity:0.4;"></div> アクセス良好</div>
-        <div style="border-top:1px solid #e2e8f0; margin:6px 0;"></div>
-        <div class="legend-item"><div class="legend-box" style="background:#10b981; border-radius:50%;"></div> 鉄道駅 (800m圏)</div>
+        <div class="legend-title">Mobility Gap 指数 (MGS)</div>
+        <div class="legend-item"><div class="legend-box" style="background:#dc2626;"></div> 深刻・最優先 (MGS ≥ 4,000)</div>
+        <div class="legend-item"><div class="legend-box" style="background:#f97316;"></div> 交通空白 (1,500 ≤ MGS < 4,000)</div>
+        <div class="legend-item"><div class="legend-box" style="background:#eab308;"></div> 注意・不便 (600 ≤ MGS < 1,500)</div>
+        <div class="legend-item"><div class="legend-box" style="background:#22c55e;"></div> 良好・軽微 (200 ≤ MGS < 600)</div>
+        <div class="legend-item"><div class="legend-box" style="background:#2563eb;"></div> 極めて良好 (MGS < 200)</div>
+        <div style="border-top:1px solid #e2e8f0; margin:5px 0;"></div>
+        <div class="legend-item"><div class="legend-box" style="background:#059669; border-radius:50%;"></div> 鉄道駅 (800m圏)</div>
         <div class="legend-item"><div class="legend-box" style="background:#2563eb; border-radius:50%;"></div> バス停 (400m圏)</div>
       `;
       return div;
