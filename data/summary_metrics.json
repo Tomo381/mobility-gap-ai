@@ -1,25 +1,26 @@
 {
-  "mesh_count": 2448,
-  "total_population": 3484334,
-  "total_elderly": 834590,
+  "region_name": "愛知県全域",
+  "mesh_count": 12336,
+  "total_population": 7542415,
+  "total_elderly": 1864603,
   "level_counts": {
-    "1": 909,
-    "2": 571,
-    "3": 410,
-    "4": 370,
-    "5": 188
+    "1": 8327,
+    "2": 2933,
+    "3": 872,
+    "4": 172,
+    "5": 32
   },
   "level_elderly": {
-    "1": 324916,
-    "2": 229327,
-    "3": 122283,
-    "4": 95868,
-    "5": 62196
+    "1": 931576,
+    "2": 674985,
+    "3": 218675,
+    "4": 34955,
+    "5": 4412
   },
-  "critical_mesh_count": 188,
-  "critical_elderly": 62196,
-  "blank_mesh_count": 558,
-  "blank_elderly": 158064,
-  "station_count": 242,
-  "bus_stop_count": 3886
+  "critical_mesh_count": 32,
+  "critical_elderly": 4412,
+  "blank_mesh_count": 204,
+  "blank_elderly": 39367,
+  "station_count": 774,
+  "bus_stop_count": 9121
 }

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mobility Gap AI - 名古屋市 交通空白地帯・移動格差分析ダッシュボード</title>
+  <title>Mobility Gap AI - 愛知県 交通空白地帯・移動格差分析ダッシュボード</title>
   
   <!-- Leaflet CSS & JS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -252,35 +252,35 @@
   <div id="sidebar">
     <div class="header">
       <h1>Mobility Gap AI</h1>
-      <p>名古屋都市圏 移動格差・交通アクセシビリティ分析</p>
+      <p>愛知県全域 移動格差・交通アクセシビリティ分析</p>
     </div>
 
     <div class="content">
       <!-- KPI サマリー -->
       <div class="section-title">
-        <span>分析サマリー</span>
+        <span>全域分析サマリー</span>
         <span id="load-badge" class="badge badge-green">データ読込中...</span>
       </div>
       <div class="kpi-grid">
         <div class="kpi-card critical">
           <div class="kpi-title">深刻（最優先対策）</div>
-          <div class="kpi-value" id="kpi-critical-mesh">188 箇所</div>
-          <div class="kpi-sub">高齢者 <span id="kpi-critical-elderly">62,196</span> 人</div>
+          <div class="kpi-value" id="kpi-critical-mesh">32 箇所</div>
+          <div class="kpi-sub">高齢者 <span id="kpi-critical-elderly">4,412</span> 人</div>
         </div>
         <div class="kpi-card blank">
           <div class="kpi-title">交通空白（要改善）</div>
-          <div class="kpi-value" id="kpi-blank-mesh">558 箇所</div>
+          <div class="kpi-value" id="kpi-blank-mesh">204 箇所</div>
           <div class="kpi-sub">深刻・空白エリア計</div>
         </div>
         <div class="kpi-card">
           <div class="kpi-title">公共交通網</div>
-          <div class="kpi-value" id="kpi-transit">3,886 / 242</div>
+          <div class="kpi-value" id="kpi-transit">9,121 / 774</div>
           <div class="kpi-sub">バス停留所 / 鉄道駅</div>
         </div>
         <div class="kpi-card">
           <div class="kpi-title">対象地域 人口</div>
-          <div class="kpi-value" id="kpi-pop">3,484,334</div>
-          <div class="kpi-sub">うち65歳以上 834,590人</div>
+          <div class="kpi-value" id="kpi-pop">7,542,415 人</div>
+          <div class="kpi-sub">うち65歳以上 1,864,603人</div>
         </div>
       </div>
 
@@ -343,7 +343,7 @@
       <div class="card">
         <label class="checkbox-label">
           <input type="radio" name="level-filter" value="all" checked />
-          <span>全メッシュ表示 (2,448件)</span>
+          <span>愛知県全メッシュ表示 (12,336件)</span>
         </label>
         <label class="checkbox-label">
           <input type="radio" name="level-filter" value="critical-only" />
@@ -372,7 +372,7 @@
         <label class="checkbox-label">
           <input type="checkbox" id="layer-stations" checked />
           <span class="color-dot" style="background: #059669;"></span>
-          <span>鉄道駅 (242駅)</span>
+          <span>鉄道駅 (774駅)</span>
         </label>
         <label class="checkbox-label">
           <input type="checkbox" id="layer-station-buffer" checked />
@@ -382,7 +382,7 @@
         <label class="checkbox-label">
           <input type="checkbox" id="layer-bus-stops" />
           <span class="color-dot" style="background: #3b82f6;"></span>
-          <span>バス停留所 (3,886箇所)</span>
+          <span>バス停留所 (9,121箇所)</span>
         </label>
         <label class="checkbox-label">
           <input type="checkbox" id="layer-bus-buffer" />
@@ -398,12 +398,14 @@
   <div id="map"></div>
 
   <script>
-    // 1. 地図初期化
-    const map = L.map('map').setView([35.170, 136.920], 12);
+    // 1. 地図初期化（Canvas レンダラー優先で万単位のメッシュ・マーカーも高速描画）
+    const map = L.map('map', {
+      preferCanvas: true
+    }).setView([35.050, 137.150], 10);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 18,
-      attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a> | 国土数値情報 | 令和2年国勢調査'
+      attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a> | 国土数値情報（バス・鉄道） | 令和2年国勢調査'
     }).addTo(map);
 
     // レイヤーグループ
@@ -500,8 +502,8 @@
       `;
     }
 
-    // 2. 鉄道駅データの読み込み
-    fetch('data/nagoya_stations.geojson')
+    // 2. 鉄道駅データの読み込み (愛知県全域 774駅)
+    fetch('data/aichi_stations.geojson')
       .then(res => res.json())
       .then(data => {
         data.features.forEach(feat => {
@@ -537,13 +539,13 @@
       })
       .catch(err => console.warn('駅データ読込待機:', err));
 
-    // 3. メッシュGeoJSONデータの読み込み
-    fetch('data/nagoya_mobility_gap_mesh.geojson')
+    // 3. メッシュGeoJSONデータの読み込み (愛知県全域 12,336件)
+    fetch('data/aichi_mobility_gap_mesh.geojson')
       .then(res => res.json())
       .then(data => {
         allMeshFeatures = data.features;
         renderMeshLayer();
-        document.getElementById('load-badge').textContent = 'データ反映完了';
+        document.getElementById('load-badge').textContent = '全域反映完了';
         document.getElementById('load-badge').className = 'badge badge-green';
       })
       .catch(err => {
@@ -564,11 +566,12 @@
       })
       .catch(err => console.warn('サマリー読込待機:', err));
 
-    // 5. バス停データのオンデマンド読み込み
+    // 5. 愛知県全域バス停データのオンデマンド読み込み (9,121件)
     let busLoaded = false;
     function loadBusStops() {
       if (busLoaded) return;
-      fetch('data/Nagoya_bus_stop.text')
+      document.getElementById('load-badge').textContent = 'バス停読込中...';
+      fetch('data/aichi_bus_stops.csv')
         .then(res => res.text())
         .then(csv => {
           Papa.parse(csv, {
@@ -587,7 +590,7 @@
                   weight: 0.8,
                   fillOpacity: 0.8
                 });
-                marker.bindPopup(`<strong>🚏 ${stop.stop_name}</strong><br>のりば: ${stop.platform_code || '-'}`);
+                marker.bindPopup(`<strong>🚏 ${stop.stop_name}</strong><br><span style="color:#64748b;">${stop.operator || '一般路線バス'}</span>`);
                 busStopLayer.addLayer(marker);
 
                 const circle = L.circle([lat, lon], {
@@ -600,6 +603,7 @@
                 busBufferLayer.addLayer(circle);
               });
               busLoaded = true;
+              document.getElementById('load-badge').textContent = '全域反映完了';
             }
           });
         });
