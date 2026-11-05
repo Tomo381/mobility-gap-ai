@@ -4,23 +4,23 @@
   "total_population": 7542415,
   "total_elderly": 1864603,
   "level_counts": {
-    "1": 7293,
-    "2": 3357,
-    "3": 1278,
-    "4": 344,
-    "5": 64
+    "1": 5365,
+    "2": 3792,
+    "3": 2087,
+    "4": 847,
+    "5": 245
   },
   "level_elderly": {
-    "1": 790580,
-    "2": 716967,
-    "3": 288869,
-    "4": 61323,
-    "5": 6864
+    "1": 534373,
+    "2": 716387,
+    "3": 434877,
+    "4": 149136,
+    "5": 29830
   },
-  "critical_mesh_count": 64,
-  "critical_elderly": 6864,
-  "blank_mesh_count": 408,
-  "blank_elderly": 68187,
+  "critical_mesh_count": 245,
+  "critical_elderly": 29830,
+  "blank_mesh_count": 1092,
+  "blank_elderly": 178966,
   "station_count": 774,
   "station_freq_summary": {
     "標準": 244,
@@ -29,5 +29,16 @@
     "極めて低頻度": 95,
     "超高頻度": 22
   },
-  "bus_stop_count": 9121
+  "bus_stop_count": 9121,
+  "bus_freq_summary": {
+    "やや低頻度": 4606,
+    "標準": 1586,
+    "高頻度": 1624,
+    "低頻度": 1047,
+    "極めて低頻度": 258
+  },
+  "bus_data_source_summary": {
+    "実GTFSダイヤ (名古屋市交通局)": 1593,
+    "系統推計マスター (P11)": 7528
+  }
 }

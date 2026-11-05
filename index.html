@@ -264,13 +264,13 @@
       <div class="kpi-grid">
         <div class="kpi-card critical">
           <div class="kpi-title">深刻（最優先対策）</div>
-          <div class="kpi-value" id="kpi-critical-mesh">64 箇所</div>
-          <div class="kpi-sub">高齢者 <span id="kpi-critical-elderly">6,864</span> 人</div>
+          <div class="kpi-value" id="kpi-critical-mesh">245 箇所</div>
+          <div class="kpi-sub">高齢者 <span id="kpi-critical-elderly">29,830</span> 人</div>
         </div>
         <div class="kpi-card blank">
           <div class="kpi-title">交通空白（要改善）</div>
-          <div class="kpi-value" id="kpi-blank-mesh">408 箇所</div>
-          <div class="kpi-sub">深刻・空白エリア計 (高齢者 68,187人)</div>
+          <div class="kpi-value" id="kpi-blank-mesh">1,092 箇所</div>
+          <div class="kpi-sub">深刻・空白エリア計 (高齢者 178,966人)</div>
         </div>
         <div class="kpi-card">
           <div class="kpi-title">公共交通網</div>
@@ -286,10 +286,11 @@
 
       <!-- 計算式明記ボックス -->
       <div class="formula-box">
-        <div class="formula-title">📐 Mobility Gap 指数 (新・MGS) 算出式</div>
-        <code class="formula-code">MGS = 高齢者人口 × (d_bus ÷ 400) × ((d_station ÷ 800) × F_train)</code>
+        <div class="formula-title">📐 Mobility Gap 指数 (新・MGS W頻度統合版) 算出式</div>
+        <code class="formula-code">MGS = 高齢者人口 × ((d_bus ÷ 400) × F_bus) × ((d_station ÷ 800) × F_train)</code>
         <div class="formula-desc">
           ・<strong>d_bus</strong>: 最寄りバス停距離 (m) [基準徒歩圏: 400m / 徒歩5分]<br>
+          ・<strong>F_bus</strong>: バスダイヤ頻度係数（実GTFS/系統推計に応じ 1.0倍〜3.8倍）<br>
           ・<strong>d_station</strong>: 最寄り駅距離 (m) [基準徒歩圏: 800m / 徒歩10分]<br>
           ・<strong>F_train</strong>: 鉄道ダイヤ頻度係数（昼間本数に応じ 1.0倍〜3.5倍）<br>
           ・<strong>高齢者人口</strong>: 各500mメッシュ内の65歳以上人口（国勢調査）
@@ -383,7 +384,7 @@
         <label class="checkbox-label">
           <input type="checkbox" id="layer-bus-stops" />
           <span class="color-dot" style="background: #3b82f6;"></span>
-          <span>バス停留所 (9,121箇所)</span>
+          <span>バス停留所 (9,121箇所・ダイヤ頻度対応)</span>
         </label>
         <label class="checkbox-label">
           <input type="checkbox" id="layer-bus-buffer" />
@@ -486,7 +487,9 @@
 
       document.getElementById('det-pop').textContent = `${p.pop.toLocaleString()} 人 / ${p.elderly.toLocaleString()} 人`;
       document.getElementById('det-aging').textContent = `${p.aging_rate}%`;
-      document.getElementById('det-bus').textContent = `${p.d_bus} m (${p.d_bus > 400 ? '徒歩5分超' : '徒歩圏'})`;
+      
+      const busNameText = p.bus_name ? `${p.d_bus} m [${p.bus_name} / ${p.bus_op}]` : `${p.d_bus} m (${p.d_bus > 400 ? '徒歩5分超' : '徒歩圏'})`;
+      document.getElementById('det-bus').textContent = busNameText;
       
       const stNameText = p.station_name ? `${p.d_station} m [${p.station_name}駅 / ${p.station_line}]` : `${p.d_station} m`;
       document.getElementById('det-station').textContent = stNameText;
@@ -497,20 +500,64 @@
 
       // 内訳の明記
       const breakdownEl = document.getElementById('det-breakdown');
+      const busFreqDetail = p.bus_name ? `
+        <div style="margin-top: 4px; padding-top: 4px; border-top: 1px dashed #cbd5e1; font-size: 0.68rem; color: #475569;">
+          🚏 最寄り: <strong>${p.bus_name}</strong>（${p.bus_op}）<br>
+          ・昼間運行: <strong>約${p.bus_freq}本/時</strong>（約${p.bus_headway}分間隔）<br>
+          ・利便水準: <strong>${p.bus_service_level}</strong>（頻度係数 <strong>${p.bus_freq_penalty}倍</strong>）<br>
+          ・情報源: <span style="color:#2563eb;">${p.bus_data_source || '推計'}</span>
+        </div>
+      ` : '';
+
       const stFreqDetail = p.station_name ? `
         <div style="margin-top: 4px; padding-top: 4px; border-top: 1px dashed #cbd5e1; font-size: 0.68rem; color: #475569;">
-          🚆 最寄り: <strong>${p.station_name}駅</strong>（${p.station_line}）<br>
-          ・昼間本数: <strong>約${p.station_freq}本/時</strong>（${p.station_headway}分間隔）<br>
-          ・頻度評価: <strong>${p.station_service_level}</strong>（係数 <strong>${p.station_freq_penalty}倍</strong>）
+          🚆 最寄り: <strong>${p.station_name}駅</strong>（${p.station_line} / ${p.station_op}）<br>
+          ・昼間運行: <strong>約${p.station_freq}本/時</strong>（約${p.station_headway}分間隔）<br>
+          ・利便水準: <strong>${p.station_service_level}</strong>（頻度係数 <strong>${p.station_freq_penalty}倍</strong>）
         </div>
       ` : '';
 
       breakdownEl.innerHTML = `
         高齢者 <strong>${p.elderly}人</strong><br>
-        × バス離隔係数: <strong>${p.bus_penalty}</strong> (${p.d_bus}m ÷ 400m)<br>
-        × 駅離隔・ダイヤ頻度係数: <strong>${p.station_penalty}</strong> [(${p.d_station}m ÷ 800m) × 頻度${p.station_freq_penalty || 1.0}倍]<br>
+        × バス離隔・頻度係数: <strong>${p.bus_penalty}</strong> [(${p.d_bus}m ÷ 400m) × 頻度${p.bus_freq_penalty || 1.0}倍]<br>
+        × 鉄道離隔・頻度係数: <strong>${p.station_penalty}</strong> [(${p.d_station}m ÷ 800m) × 頻度${p.station_freq_penalty || 1.0}倍]<br>
         ＝ <strong>${p.gap_score.toLocaleString()}</strong>
+        ${busFreqDetail}
         ${stFreqDetail}
+      `;
+    }
+
+    // バス停詳細表示（バス停マーカークリック時）
+    function showBusStopDetail(p) {
+      document.getElementById('detail-empty').style.display = 'none';
+      const panel = document.getElementById('detail-panel');
+      panel.style.display = 'block';
+
+      document.getElementById('det-title').textContent = `🚏 ${p.stop_name}`;
+      
+      const riskEl = document.getElementById('det-risk');
+      riskEl.textContent = `利便水準: ${p.service_level} (係数 ${p.freq_penalty}倍)`;
+      const freqNum = parseFloat(p.daytime_freq) || 0;
+      riskEl.style.color = freqNum >= 4 ? '#2563eb' : (freqNum >= 2 ? '#16a34a' : (freqNum >= 1 ? '#d97706' : '#dc2626'));
+
+      document.getElementById('det-pop').textContent = `運行事業者: ${p.operator}`;
+      document.getElementById('det-aging').textContent = `昼間運行: 約 ${p.daytime_freq} 本 / 時`;
+      document.getElementById('det-bus').textContent = `平均間隔: 約 ${p.headway_min} 分`;
+      document.getElementById('det-station').textContent = `平日発着: 約 ${p.daily_trips || '-'} 便 / 日`;
+      
+      const scoreEl = document.getElementById('det-gapscore');
+      scoreEl.textContent = `F_bus = ${p.freq_penalty}`;
+      scoreEl.style.color = riskEl.style.color;
+
+      const breakdownEl = document.getElementById('det-breakdown');
+      breakdownEl.innerHTML = `
+        <strong>【バス停留所 運行頻度情報】</strong><br>
+        ・運行事業者: ${p.operator}<br>
+        ・昼間運行頻度: <strong>約 ${p.daytime_freq} 本 / 時</strong>（${p.headway_min}分間隔）<br>
+        ・頻度ペナルティ係数: <strong>${p.freq_penalty} 倍</strong><br>
+        ・サービス水準: <strong>${p.service_level}</strong><br>
+        ・情報ソース: <span style="color:#2563eb; font-weight:600;">${p.data_source}</span><br>
+        <span style="color:#64748b; font-size:0.68rem;">${p.remarks || ''}</span>
       `;
     }
 
@@ -622,7 +669,7 @@
       })
       .catch(err => console.warn('サマリー読込待機:', err));
 
-    // 5. 愛知県全域バス停データのオンデマンド読み込み (9,121件)
+    // 5. 愛知県全域バス停データのオンデマンド読み込み (9,121件・頻度属性付き)
     let busLoaded = false;
     function loadBusStops() {
       if (busLoaded) return;
@@ -639,14 +686,35 @@
                 const lon = parseFloat(stop.stop_lon);
                 if (isNaN(lat) || isNaN(lon)) return;
 
+                const freqNum = parseFloat(stop.daytime_freq) || 0;
+                const freqColor = freqNum >= 4 ? '#2563eb' : (freqNum >= 2 ? '#16a34a' : (freqNum >= 1 ? '#d97706' : '#dc2626'));
+
                 const marker = L.circleMarker([lat, lon], {
-                  radius: 3,
-                  fillColor: '#2563eb',
+                  radius: 3.5,
+                  fillColor: freqColor,
                   color: '#ffffff',
                   weight: 0.8,
-                  fillOpacity: 0.8
+                  fillOpacity: 0.85
                 });
-                marker.bindPopup(`<strong>🚏 ${stop.stop_name}</strong><br><span style="color:#64748b;">${stop.operator || '一般路線バス'}</span>`);
+
+                marker.bindPopup(`
+                  <div style="font-size: 0.88rem; min-width: 200px;">
+                    <strong style="font-size: 0.95rem;">🚏 ${stop.stop_name}</strong><br/>
+                    <span style="color:#64748b;">${stop.operator || '一般路線バス'}</span>
+                    <div style="margin-top:6px; padding:6px 8px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:5px; font-size:0.75rem; line-height:1.45;">
+                      <div>昼間運行: <strong>約 ${stop.daytime_freq} 本 / 時</strong> (約 ${stop.headway_min} 分間隔)</div>
+                      <div>利便水準: <span style="font-weight:700; color:${freqColor};">${stop.service_level} (係数 ${stop.freq_penalty}倍)</span></div>
+                      <div>平日発着: <strong>約 ${stop.daily_trips || '-'} 便 / 日</strong></div>
+                      <div style="color:#2563eb; font-size:0.7rem; margin-top:2px;">📊 ${stop.data_source}</div>
+                      ${stop.remarks ? `<div style="color:#64748b; font-size:0.68rem; margin-top:2px;">※${stop.remarks}</div>` : ''}
+                    </div>
+                  </div>
+                `);
+
+                marker.on('click', () => {
+                  showBusStopDetail(stop);
+                });
+
                 busStopLayer.addLayer(marker);
 
                 const circle = L.circle([lat, lon], {
