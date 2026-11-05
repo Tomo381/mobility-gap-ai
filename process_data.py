@@ -1,12 +1,14 @@
 """
-Mobility Gap AI - Data Processing Pipeline (愛知県全域対応版)
+Mobility Gap AI - Data Processing Pipeline (愛知県全域・運行頻度加味対応版)
 愛知県全域の公共交通データ（国土数値情報P11バス停・N02鉄道駅）と国勢調査500mメッシュ人口データを統合し、
-交通空白地帯および移動格差スコア（Mobility Gap Score: MGS）を算出する。
+鉄道運行頻度（ダイヤヘッドウェイ係数 F_train）を組み込んだ移動格差スコア（Mobility Gap Score: MGS）を算出する。
 """
 
 import json
 import math
 import os
+import re
+import csv
 import xml.etree.ElementTree as ET
 import pandas as pd
 import numpy as np
@@ -88,6 +90,70 @@ def parse_p11_bus_stops(xml_file):
 
     return bus_stops
 
+def load_frequency_master(master_file):
+    """
+    鉄道運行頻度マスターCSVを読み込み
+    """
+    rules = []
+    if os.path.exists(master_file):
+        with open(master_file, "r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            for r in reader:
+                rules.append({
+                    "operator": r["operator"].strip(),
+                    "line": r["line"].strip(),
+                    "station_pattern": r["station_pattern"].strip(),
+                    "daytime_frequency_hourly": float(r["daytime_frequency_hourly"]),
+                    "headway_minutes": float(r["headway_minutes"]),
+                    "frequency_penalty": float(r["frequency_penalty"]),
+                    "service_level": r["service_level"].strip(),
+                    "remarks": r["remarks"].strip()
+                })
+        print(f"運行頻度マスター読み込み完了: {len(rules)} 件のルール")
+    else:
+        print(f"警告: 運行頻度マスターが見つかりません ({master_file})")
+    return rules
+
+def get_station_frequency_info(st_name, line_name, operator, master_rules):
+    """
+    駅名・路線名・事業者名から運行頻度属性を取得
+    """
+    best_rule = None
+    # 1. operator + line + station_pattern 完全マッチ
+    for rule in master_rules:
+        if rule["operator"] == operator and rule["line"] == line_name:
+            pat = rule["station_pattern"]
+            if pat and re.search(pat, st_name):
+                best_rule = rule
+                break
+            elif not pat and best_rule is None:
+                best_rule = rule
+
+    # 2. line 名のみでのフォールバック
+    if best_rule is None:
+        for rule in master_rules:
+            if rule["line"] == line_name:
+                best_rule = rule
+                break
+
+    if best_rule:
+        return {
+            "daytime_freq": best_rule["daytime_frequency_hourly"],
+            "headway_min": best_rule["headway_minutes"],
+            "freq_penalty": best_rule["frequency_penalty"],
+            "service_level": best_rule["service_level"],
+            "remarks": best_rule["remarks"]
+        }
+    else:
+        # デフォルト標準
+        return {
+            "daytime_freq": 4.0,
+            "headway_min": 15.0,
+            "freq_penalty": 1.3,
+            "service_level": "標準",
+            "remarks": "標準値フォールバック"
+        }
+
 def main():
     base_dir = os.path.dirname(os.path.abspath(__file__))
     data_dir = os.path.join(base_dir, "data")
@@ -96,12 +162,15 @@ def main():
     LAT_MIN, LAT_MAX = 34.50, 35.45
     LON_MIN, LON_MAX = 136.60, 137.85
 
-    print("=== [Step 1] 愛知県全域バス停データの読み込み ===")
+    # 運行頻度マスター読み込み
+    freq_master_file = os.path.join(data_dir, "railway_frequency_master.csv")
+    master_rules = load_frequency_master(freq_master_file)
+
+    print("\n=== [Step 1] 愛知県全域バス停データの読み込み ===")
     p11_xml = os.path.join(data_dir, "P11-22_23_GML", "P11-22_23.xml")
     if os.path.exists(p11_xml):
         bus_stops = parse_p11_bus_stops(p11_xml)
     else:
-        # フォールバック
         print("P11 XMLが見つからないため、既存の名古屋市バス停データを使用します。")
         bus_file = os.path.join(data_dir, "Nagoya_bus_stop.text")
         df_bus = pd.read_csv(bus_file)
@@ -111,13 +180,13 @@ def main():
 
     print(f"愛知県全域の有効なバス停留所数: {len(bus_stops):,} 件")
 
-    # バス停データをCSVとしても保存（フロントエンド表示用）
+    # バス停データをCSVとしても保存
     df_bus_out = pd.DataFrame(bus_stops)
     bus_out_csv = os.path.join(data_dir, "aichi_bus_stops.csv")
     df_bus_out.to_csv(bus_out_csv, index=False, encoding="utf-8")
     print(f"バス停CSV保存完了: {bus_out_csv}")
 
-    print("\n=== [Step 2] 愛知県全域の鉄道駅データの抽出とGeoJSON生成 ===")
+    print("\n=== [Step 2] 愛知県全域の鉄道駅データの抽出・運行頻度属性付与 ===")
     station_file = os.path.join(data_dir, "N02-20_GML", "N02-20_Station.geojson")
     with open(station_file, "r", encoding="utf-8") as f:
         station_raw = json.load(f)
@@ -125,6 +194,7 @@ def main():
     station_features = []
     station_points = []
     seen_stations = set()
+    freq_level_counts = {}
 
     for feat in station_raw.get("features", []):
         geom = feat.get("geometry", {})
@@ -152,12 +222,21 @@ def main():
                 continue
             seen_stations.add(key)
 
+            # 運行頻度マスターから情報取得
+            f_info = get_station_frequency_info(st_name, line_name, operator, master_rules)
+            freq_level_counts[f_info["service_level"]] = freq_level_counts.get(f_info["service_level"], 0) + 1
+
             st_item = {
                 "name": st_name,
                 "line": line_name,
                 "operator": operator,
                 "lat": avg_lat,
-                "lon": avg_lon
+                "lon": avg_lon,
+                "daytime_freq": f_info["daytime_freq"],
+                "headway_min": f_info["headway_min"],
+                "freq_penalty": f_info["freq_penalty"],
+                "service_level": f_info["service_level"],
+                "remarks": f_info["remarks"]
             }
             station_points.append(st_item)
 
@@ -170,11 +249,19 @@ def main():
                 "properties": {
                     "name": st_name,
                     "line": line_name,
-                    "operator": operator
+                    "operator": operator,
+                    "daytime_freq": f_info["daytime_freq"],
+                    "headway_min": f_info["headway_min"],
+                    "freq_penalty": f_info["freq_penalty"],
+                    "service_level": f_info["service_level"],
+                    "remarks": f_info["remarks"]
                 }
             })
 
     print(f"抽出された愛知県全域の鉄道駅数: {len(station_features):,} 件")
+    print("駅の運行頻度水準別内訳:")
+    for lvl, cnt in sorted(freq_level_counts.items(), key=lambda x: -x[1]):
+        print(f"  ・{lvl}: {cnt} 駅")
     
     # 互換性のため2つのファイル名で出力
     for st_fname in ["aichi_stations.geojson", "nagoya_stations.geojson"]:
@@ -182,7 +269,7 @@ def main():
         with open(station_out_file, "w", encoding="utf-8") as f:
             json.dump({"type": "FeatureCollection", "features": station_features}, f, ensure_ascii=False)
 
-    print("\n=== [Step 3] 国勢調査500mメッシュデータの読み込みとMGS計算 ===")
+    print("\n=== [Step 3] 国勢調査500mメッシュデータの読み込みと新・MGS計算 ===")
     mesh_pop_file = os.path.join(data_dir, "tblT001101H23.txt")
     
     with open(mesh_pop_file, "r", encoding="shift_jis") as f:
@@ -195,7 +282,7 @@ def main():
     st_lats = np.array([s["lat"] for s in station_points], dtype=np.float64)
     st_lons = np.array([s["lon"] for s in station_points], dtype=np.float64)
 
-    # 有効なメッシュの抽出
+    # 有効な居住メッシュの抽出
     valid_meshes = []
     for idx, row in df_mesh.iterrows():
         code = str(row["KEY_CODE"]).strip()
@@ -238,13 +325,13 @@ def main():
     mesh_c_lats = np.array([m["c_lat"] for m in valid_meshes], dtype=np.float64)
     mesh_c_lons = np.array([m["c_lon"] for m in valid_meshes], dtype=np.float64)
 
-    # 高速ベクトル化チャンク計算（バス停距離 & 駅距離）
-    print("NumPyチャンクベクトル計算による最寄りアクセス距離の算出中...")
+    # 高速ベクトル化チャンク計算（バス停距離 & 最寄り駅同定 & 駅距離）
+    print("NumPyチャンクベクトル計算による最寄りアクセス距離および運行頻度の算出中...")
     CHUNK_SIZE = 1000
     min_d_bus_all = []
     min_d_station_all = []
+    nearest_st_idx_all = []
 
-    # 緯度・経度1度あたりの概算距離 (m) (愛知県中心部: 緯度35度付近)
     M_PER_LAT = 111000.0
     M_PER_LON = 91000.0
 
@@ -258,14 +345,19 @@ def main():
         d_bus_chunk = np.sqrt(np.min(d_lat_b**2 + d_lon_b**2, axis=1))
         min_d_bus_all.extend(d_bus_chunk)
 
-        # 鉄道駅までの距離 (m)
+        # 鉄道駅までの距離 (m) および最近傍駅インデックス
         if len(st_lats) > 0:
             d_lat_s = (st_lats - mlat) * M_PER_LAT
             d_lon_s = (st_lons - mlon) * M_PER_LON
-            d_st_chunk = np.sqrt(np.min(d_lat_s**2 + d_lon_s**2, axis=1))
-            min_d_station_all.extend(d_st_chunk)
+            st_dist_sq = d_lat_s**2 + d_lon_s**2
+            min_st_indices = np.argmin(st_dist_sq, axis=1)
+            min_st_dist = np.sqrt(st_dist_sq[np.arange(len(st_dist_sq)), min_st_indices])
+            
+            min_d_station_all.extend(min_st_dist)
+            nearest_st_idx_all.extend(min_st_indices)
         else:
             min_d_station_all.extend([99999.0] * len(mlat))
+            nearest_st_idx_all.extend([-1] * len(mlat))
 
     min_d_bus_all = np.array(min_d_bus_all)
     min_d_station_all = np.array(min_d_station_all)
@@ -282,12 +374,31 @@ def main():
         elderly75 = m["elderly75"]
         min_d_bus = float(min_d_bus_all[idx])
         min_d_station = float(min_d_station_all[idx])
+        st_idx = nearest_st_idx_all[idx]
+
+        if st_idx >= 0:
+            st_info = station_points[st_idx]
+            st_name = st_info["name"]
+            st_line = st_info["line"]
+            st_op = st_info["operator"]
+            st_freq = st_info["daytime_freq"]
+            st_headway = st_info["headway_min"]
+            st_penalty_rate = st_info["freq_penalty"]
+            st_level = st_info["service_level"]
+        else:
+            st_name = "なし"
+            st_line = ""
+            st_op = ""
+            st_freq = 0.0
+            st_headway = 999.0
+            st_penalty_rate = 2.0
+            st_level = "なし"
 
         aging_rate = round((elderly / pop * 100.0), 1) if pop > 0 else 0.0
 
-        # Mobility Gap Score (MGS)
+        # Mobility Gap Score (新・MGS計算式: 運行頻度係数 F_train を乗算)
         bus_penalty = round(min_d_bus / 400.0, 3)
-        station_penalty = round(min_d_station / 800.0, 3)
+        station_penalty = round((min_d_station / 800.0) * st_penalty_rate, 3)
         gap_score = round(elderly * bus_penalty * station_penalty, 1)
 
         # 5段階リスクレベル分類
@@ -341,6 +452,13 @@ def main():
                 "d_station": int(min_d_station),
                 "bus_penalty": bus_penalty,
                 "station_penalty": station_penalty,
+                "station_name": st_name,
+                "station_line": st_line,
+                "station_op": st_op,
+                "station_freq": st_freq,
+                "station_headway": st_headway,
+                "station_freq_penalty": st_penalty_rate,
+                "station_service_level": st_level,
                 "gap_score": gap_score,
                 "gap_level": gap_level,
                 "risk_label": risk_label,
@@ -348,7 +466,7 @@ def main():
             }
         })
 
-    print(f"\n=== 愛知県全域 5段階分類結果 ===")
+    print(f"\n=== 愛知県全域 運行頻度加味後の5段階分類結果 ===")
     print(f"対象地域総人口: {int(total_area_pop):,} 人 (うち高齢者: {int(total_area_elderly):,} 人)")
     print(f"  Level 1 (青 / 極めて良好): {level_counts[1]:,} 件 (高齢者: {level_elderly[1]:,} 人)")
     print(f"  Level 2 (黄緑 / 良好):    {level_counts[2]:,} 件 (高齢者: {level_elderly[2]:,} 人)")
@@ -375,6 +493,7 @@ def main():
         "blank_mesh_count": level_counts[4] + level_counts[5],
         "blank_elderly": level_elderly[4] + level_elderly[5],
         "station_count": len(station_features),
+        "station_freq_summary": freq_level_counts,
         "bus_stop_count": len(bus_stops)
     }
     summary_file = os.path.join(data_dir, "summary_metrics.json")
@@ -382,7 +501,7 @@ def main():
         json.dump(summary_data, f, ensure_ascii=False, indent=2)
     print(f"サマリー指標保存完了: {summary_file}")
 
-    print("\n[SUCCESS] 愛知県全域の前処理・MGS算出がすべて完了しました！")
+    print("\n[SUCCESS] 愛知県全域の運行頻度加味前処理・新MGS算出がすべて完了しました！")
 
 if __name__ == "__main__":
     main()

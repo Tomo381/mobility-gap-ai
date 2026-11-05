@@ -264,13 +264,13 @@
       <div class="kpi-grid">
         <div class="kpi-card critical">
           <div class="kpi-title">深刻（最優先対策）</div>
-          <div class="kpi-value" id="kpi-critical-mesh">32 箇所</div>
-          <div class="kpi-sub">高齢者 <span id="kpi-critical-elderly">4,412</span> 人</div>
+          <div class="kpi-value" id="kpi-critical-mesh">64 箇所</div>
+          <div class="kpi-sub">高齢者 <span id="kpi-critical-elderly">6,864</span> 人</div>
         </div>
         <div class="kpi-card blank">
           <div class="kpi-title">交通空白（要改善）</div>
-          <div class="kpi-value" id="kpi-blank-mesh">204 箇所</div>
-          <div class="kpi-sub">深刻・空白エリア計</div>
+          <div class="kpi-value" id="kpi-blank-mesh">408 箇所</div>
+          <div class="kpi-sub">深刻・空白エリア計 (高齢者 68,187人)</div>
         </div>
         <div class="kpi-card">
           <div class="kpi-title">公共交通網</div>
@@ -286,11 +286,12 @@
 
       <!-- 計算式明記ボックス -->
       <div class="formula-box">
-        <div class="formula-title">📐 Mobility Gap 指数 (MGS) 算出式</div>
-        <code class="formula-code">MGS = 高齢者人口 × (d_bus ÷ 400) × (d_station ÷ 800)</code>
+        <div class="formula-title">📐 Mobility Gap 指数 (新・MGS) 算出式</div>
+        <code class="formula-code">MGS = 高齢者人口 × (d_bus ÷ 400) × ((d_station ÷ 800) × F_train)</code>
         <div class="formula-desc">
           ・<strong>d_bus</strong>: 最寄りバス停距離 (m) [基準徒歩圏: 400m / 徒歩5分]<br>
           ・<strong>d_station</strong>: 最寄り駅距離 (m) [基準徒歩圏: 800m / 徒歩10分]<br>
+          ・<strong>F_train</strong>: 鉄道ダイヤ頻度係数（昼間本数に応じ 1.0倍〜3.5倍）<br>
           ・<strong>高齢者人口</strong>: 各500mメッシュ内の65歳以上人口（国勢調査）
         </div>
       </div>
@@ -486,7 +487,9 @@
       document.getElementById('det-pop').textContent = `${p.pop.toLocaleString()} 人 / ${p.elderly.toLocaleString()} 人`;
       document.getElementById('det-aging').textContent = `${p.aging_rate}%`;
       document.getElementById('det-bus').textContent = `${p.d_bus} m (${p.d_bus > 400 ? '徒歩5分超' : '徒歩圏'})`;
-      document.getElementById('det-station').textContent = `${p.d_station} m (${p.d_station > 800 ? '徒歩10分超' : '徒歩圏'})`;
+      
+      const stNameText = p.station_name ? `${p.d_station} m [${p.station_name}駅 / ${p.station_line}]` : `${p.d_station} m`;
+      document.getElementById('det-station').textContent = stNameText;
       
       const scoreEl = document.getElementById('det-gapscore');
       scoreEl.textContent = p.gap_score.toLocaleString();
@@ -494,11 +497,52 @@
 
       // 内訳の明記
       const breakdownEl = document.getElementById('det-breakdown');
+      const stFreqDetail = p.station_name ? `
+        <div style="margin-top: 4px; padding-top: 4px; border-top: 1px dashed #cbd5e1; font-size: 0.68rem; color: #475569;">
+          🚆 最寄り: <strong>${p.station_name}駅</strong>（${p.station_line}）<br>
+          ・昼間本数: <strong>約${p.station_freq}本/時</strong>（${p.station_headway}分間隔）<br>
+          ・頻度評価: <strong>${p.station_service_level}</strong>（係数 <strong>${p.station_freq_penalty}倍</strong>）
+        </div>
+      ` : '';
+
       breakdownEl.innerHTML = `
         高齢者 <strong>${p.elderly}人</strong><br>
         × バス離隔係数: <strong>${p.bus_penalty}</strong> (${p.d_bus}m ÷ 400m)<br>
-        × 駅離隔係数: <strong>${p.station_penalty}</strong> (${p.d_station}m ÷ 800m)<br>
+        × 駅離隔・ダイヤ頻度係数: <strong>${p.station_penalty}</strong> [(${p.d_station}m ÷ 800m) × 頻度${p.station_freq_penalty || 1.0}倍]<br>
         ＝ <strong>${p.gap_score.toLocaleString()}</strong>
+        ${stFreqDetail}
+      `;
+    }
+
+    // 駅詳細表示（駅マーカークリック時）
+    function showStationDetail(p) {
+      document.getElementById('detail-empty').style.display = 'none';
+      const panel = document.getElementById('detail-panel');
+      panel.style.display = 'block';
+
+      document.getElementById('det-title').textContent = `🚆 ${p.name}駅 (${p.line})`;
+      
+      const riskEl = document.getElementById('det-risk');
+      riskEl.textContent = `利便水準: ${p.service_level} (係数 ${p.freq_penalty}倍)`;
+      riskEl.style.color = p.daytime_freq >= 8 ? '#2563eb' : (p.daytime_freq >= 4 ? '#16a34a' : (p.daytime_freq >= 2 ? '#d97706' : '#dc2626'));
+
+      document.getElementById('det-pop').textContent = `運行事業者: ${p.operator}`;
+      document.getElementById('det-aging').textContent = `昼間本数: 約 ${p.daytime_freq} 本 / 時`;
+      document.getElementById('det-bus').textContent = `平均間隔: 約 ${p.headway_min} 分`;
+      document.getElementById('det-station').textContent = `徒歩圏基準: 800m`;
+      
+      const scoreEl = document.getElementById('det-gapscore');
+      scoreEl.textContent = `F_train = ${p.freq_penalty}`;
+      scoreEl.style.color = riskEl.style.color;
+
+      const breakdownEl = document.getElementById('det-breakdown');
+      breakdownEl.innerHTML = `
+        <strong>【駅の運行頻度マスター情報】</strong><br>
+        ・路線: ${p.line} (${p.operator})<br>
+        ・昼間本数: <strong>約 ${p.daytime_freq} 本 / 時</strong>（${p.headway_min}分ヘッドウェイ）<br>
+        ・頻度ペナルティ係数: <strong>${p.freq_penalty} 倍</strong><br>
+        ・サービス水準: <strong>${p.service_level}</strong><br>
+        <span style="color:#64748b; font-size:0.68rem;">${p.remarks || ''}</span>
       `;
     }
 
@@ -519,12 +563,24 @@
             fillOpacity: 0.9
           });
 
+          const freqBadgeColor = p.daytime_freq >= 8 ? '#2563eb' : (p.daytime_freq >= 4 ? '#16a34a' : (p.daytime_freq >= 2 ? '#d97706' : '#dc2626'));
+
           marker.bindPopup(`
-            <div style="font-size: 0.9rem;">
-              <strong>🚆 ${p.name}駅</strong><br/>
+            <div style="font-size: 0.88rem; min-width: 190px;">
+              <strong style="font-size: 0.95rem;">🚆 ${p.name}駅</strong><br/>
               <span style="color:#64748b;">${p.line} (${p.operator})</span>
+              <div style="margin-top:6px; padding:6px 8px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:5px; font-size:0.75rem; line-height:1.45;">
+                <div>昼間運行: <strong>約 ${p.daytime_freq} 本 / 時</strong> (約 ${p.headway_min} 分間隔)</div>
+                <div>利便水準: <span style="font-weight:700; color:${freqBadgeColor};">${p.service_level} (係数 ${p.freq_penalty}倍)</span></div>
+                ${p.remarks ? `<div style="color:#64748b; font-size:0.7rem; margin-top:2px;">※${p.remarks}</div>` : ''}
+              </div>
             </div>
           `);
+
+          marker.on('click', () => {
+            showStationDetail(p);
+          });
+
           stationLayer.addLayer(marker);
 
           const buffer = L.circle([lat, lon], {

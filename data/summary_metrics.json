@@ -4,23 +4,30 @@
   "total_population": 7542415,
   "total_elderly": 1864603,
   "level_counts": {
-    "1": 8327,
-    "2": 2933,
-    "3": 872,
-    "4": 172,
-    "5": 32
+    "1": 7293,
+    "2": 3357,
+    "3": 1278,
+    "4": 344,
+    "5": 64
   },
   "level_elderly": {
-    "1": 931576,
-    "2": 674985,
-    "3": 218675,
-    "4": 34955,
-    "5": 4412
+    "1": 790580,
+    "2": 716967,
+    "3": 288869,
+    "4": 61323,
+    "5": 6864
   },
-  "critical_mesh_count": 32,
-  "critical_elderly": 4412,
-  "blank_mesh_count": 204,
-  "blank_elderly": 39367,
+  "critical_mesh_count": 64,
+  "critical_elderly": 6864,
+  "blank_mesh_count": 408,
+  "blank_elderly": 68187,
   "station_count": 774,
+  "station_freq_summary": {
+    "標準": 244,
+    "高頻度": 326,
+    "やや低頻度": 87,
+    "極めて低頻度": 95,
+    "超高頻度": 22
+  },
   "bus_stop_count": 9121
 }
