@@ -261,7 +261,7 @@
         <span>全域分析サマリー</span>
         <span id="load-badge" class="badge badge-green">データ読込中...</span>
       </div>
-      <div class="kpi-grid">
+      <div class="kpi-grid" style="grid-template-columns: 1fr 1fr; gap: 6px;">
         <div class="kpi-card critical">
           <div class="kpi-title">深刻（最優先対策）</div>
           <div class="kpi-value" id="kpi-critical-mesh">245 箇所</div>
@@ -272,15 +272,15 @@
           <div class="kpi-value" id="kpi-blank-mesh">1,092 箇所</div>
           <div class="kpi-sub">深刻・空白エリア計 (高齢者 178,966人)</div>
         </div>
-        <div class="kpi-card">
-          <div class="kpi-title">公共交通網</div>
-          <div class="kpi-value" id="kpi-transit">9,121 / 774</div>
-          <div class="kpi-sub">バス停留所 / 鉄道駅</div>
+        <div class="kpi-card" style="border-left-color: #8b5cf6; background: #f5f3ff;">
+          <div class="kpi-title">交通空白 × 買い物難民</div>
+          <div class="kpi-value" id="kpi-double-desert">819 箇所</div>
+          <div class="kpi-sub">高齢者 <span id="kpi-double-elderly">87,374</span> 人 (スーパー1km超)</div>
         </div>
-        <div class="kpi-card">
-          <div class="kpi-title">対象地域 人口</div>
-          <div class="kpi-value" id="kpi-pop">7,542,415 人</div>
-          <div class="kpi-sub">うち65歳以上 1,864,603人</div>
+        <div class="kpi-card" style="border-left-color: #0d9488; background: #f0fdfa;">
+          <div class="kpi-title">医療・商業インフラ</div>
+          <div class="kpi-value" id="kpi-facilities">9,607 / 1,516</div>
+          <div class="kpi-sub">医療機関 / スーパー・薬局</div>
         </div>
       </div>
 
@@ -293,7 +293,7 @@
           ・<strong>F_bus</strong>: バスダイヤ頻度係数（実GTFS/系統推計に応じ 1.0倍〜3.8倍）<br>
           ・<strong>d_station</strong>: 最寄り駅距離 (m) [基準徒歩圏: 800m / 徒歩10分]<br>
           ・<strong>F_train</strong>: 鉄道ダイヤ頻度係数（昼間本数に応じ 1.0倍〜3.5倍）<br>
-          ・<strong>高齢者人口</strong>: 各500mメッシュ内の65歳以上人口（国勢調査）
+          ・<strong>Phase 4統合</strong>: 医療機関（9,607件）＆商業施設（1,516件）アクセス評価連携
         </div>
       </div>
 
@@ -301,7 +301,7 @@
       <div class="section-title">選択地点の詳細情報</div>
       <div id="detail-card" class="card">
         <div id="detail-empty" style="color: #94a3b8; font-size: 0.78rem; text-align: center; padding: 12px 0;">
-          地図上のメッシュまたは駅をクリックしてください
+          地図上のメッシュ・駅・施設をクリックしてください
         </div>
         <div id="detail-panel">
           <div class="detail-row">
@@ -321,12 +321,20 @@
             <span class="detail-val" id="det-aging">-</span>
           </div>
           <div class="detail-row">
-            <span class="detail-label">最寄りバス停距離:</span>
+            <span class="detail-label">最寄り公共交通:</span>
             <span class="detail-val" id="det-bus">-</span>
           </div>
           <div class="detail-row">
-            <span class="detail-label">最寄り駅距離:</span>
+            <span class="detail-label">最寄り鉄道駅:</span>
             <span class="detail-val" id="det-station">-</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">最寄り医療機関:</span>
+            <span class="detail-val" id="det-med">-</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">最寄り商業施設:</span>
+            <span class="detail-val" id="det-comm">-</span>
           </div>
           <div class="detail-row">
             <span class="detail-label">Mobility Gap 指数:</span>
@@ -334,7 +342,7 @@
           </div>
           <!-- 計算内訳ボックス -->
           <div class="breakdown-box">
-            <div class="breakdown-title">【計算内訳】</div>
+            <div class="breakdown-title">【計算内訳・生活アクセス診断】</div>
             <div id="det-breakdown" style="color: #475569; line-height: 1.4;">-</div>
           </div>
         </div>
@@ -356,6 +364,16 @@
           <input type="radio" name="level-filter" value="blank-only" />
           <span class="color-dot" style="background: #f97316;"></span>
           <span>交通空白（橙・赤）のみ抽出</span>
+        </label>
+        <label class="checkbox-label">
+          <input type="radio" name="level-filter" value="double-desert-only" />
+          <span class="color-dot" style="background: #8b5cf6;"></span>
+          <strong>交通空白 × 買い物難民 (819箇所)</strong>
+        </label>
+        <label class="checkbox-label">
+          <input type="radio" name="level-filter" value="medical-desert-only" />
+          <span class="color-dot" style="background: #0ea5e9;"></span>
+          <span>医療アクセス困難 (病院・診療所 1.5km超)</span>
         </label>
         <div style="border-top: 1px dashed #e2e8f0; margin: 6px 0;"></div>
         <label class="checkbox-label">
@@ -391,6 +409,28 @@
           <span class="color-dot" style="background: #bfdbfe; border: 1px solid #3b82f6;"></span>
           <span>バス停 徒歩5分圏バッファ (400m)</span>
         </label>
+        <div style="border-top: 1px dashed #e2e8f0; margin: 6px 0;"></div>
+        <div style="font-size: 0.7rem; font-weight: 700; color: #64748b; margin-bottom: 4px;">生活利便POI (Phase 4)</div>
+        <label class="checkbox-label">
+          <input type="checkbox" id="layer-hospitals" />
+          <span class="color-dot" style="background: #e11d48;"></span>
+          <span>🏥 総合病院 (321施設)</span>
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" id="layer-clinics" />
+          <span class="color-dot" style="background: #0284c7;"></span>
+          <span>🩺 診療所・クリニック (5,540施設)</span>
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" id="layer-commercial" />
+          <span class="color-dot" style="background: #ea580c;"></span>
+          <span>🛒 商業施設 (スーパー・ドラッグストア 1,516件)</span>
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" id="layer-supermarket-buffer" />
+          <span class="color-dot" style="background: #ffedd5; border: 1px solid #ea580c;"></span>
+          <span>スーパー 徒歩15分圏バッファ (1,000m)</span>
+        </label>
       </div>
 
     </div>
@@ -416,6 +456,10 @@
     const stationBufferLayer = L.layerGroup().addTo(map);
     const busStopLayer = L.layerGroup();
     const busBufferLayer = L.layerGroup();
+    const hospitalLayer = L.layerGroup();
+    const clinicLayer = L.layerGroup();
+    const commercialLayer = L.layerGroup();
+    const supermarketBufferLayer = L.layerGroup();
 
     let allMeshFeatures = [];
     let selectedPolygon = null;
@@ -449,6 +493,8 @@
         // フィルタ判定
         if (filterRadio === 'critical-only' && p.gap_level < 5) return;
         if (filterRadio === 'blank-only' && p.gap_level < 4) return;
+        if (filterRadio === 'double-desert-only' && !(p.is_shopping_desert && p.gap_level >= 4)) return;
+        if (filterRadio === 'medical-desert-only' && !p.is_medical_desert) return;
         if (elderlyDense && p.elderly < 100) return;
 
         const coords = feat.geometry.coordinates[0].map(pt => [pt[1], pt[0]]);
@@ -488,34 +534,61 @@
       document.getElementById('det-pop').textContent = `${p.pop.toLocaleString()} 人 / ${p.elderly.toLocaleString()} 人`;
       document.getElementById('det-aging').textContent = `${p.aging_rate}%`;
       
-      const busNameText = p.bus_name ? `${p.d_bus} m [${p.bus_name} / ${p.bus_op}]` : `${p.d_bus} m (${p.d_bus > 400 ? '徒歩5分超' : '徒歩圏'})`;
+      const busNameText = p.bus_name ? `${p.d_bus} m [${p.bus_name}]` : `${p.d_bus} m`;
       document.getElementById('det-bus').textContent = busNameText;
       
-      const stNameText = p.station_name ? `${p.d_station} m [${p.station_name}駅 / ${p.station_line}]` : `${p.d_station} m`;
+      const stNameText = p.station_name ? `${p.d_station} m [${p.station_name}駅]` : `${p.d_station} m`;
       document.getElementById('det-station').textContent = stNameText;
+
+      const medWalkMin = Math.round((p.d_med || 0) / 80);
+      const medNameText = p.med_name ? `${p.d_med} m [${p.med_name} (${p.med_cat || ''})] (徒歩約${medWalkMin}分)` : `${p.d_med || '-'} m`;
+      document.getElementById('det-med').textContent = medNameText;
+
+      const commWalkMin = Math.round((p.d_comm || 0) / 80);
+      const commNameText = p.comm_name ? `${p.d_comm} m [${p.comm_name} (${p.comm_cat || ''})] (徒歩約${commWalkMin}分)` : `${p.d_comm || '-'} m`;
+      document.getElementById('det-comm').textContent = commNameText;
       
       const scoreEl = document.getElementById('det-gapscore');
       scoreEl.textContent = p.gap_score.toLocaleString();
       scoreEl.style.color = LEVEL_COLORS[p.gap_level];
 
-      // 内訳の明記
+      // 内訳および生活アクセス診断
       const breakdownEl = document.getElementById('det-breakdown');
       const busFreqDetail = p.bus_name ? `
         <div style="margin-top: 4px; padding-top: 4px; border-top: 1px dashed #cbd5e1; font-size: 0.68rem; color: #475569;">
-          🚏 最寄り: <strong>${p.bus_name}</strong>（${p.bus_op}）<br>
+          🚏 最寄りバス: <strong>${p.bus_name}</strong>（${p.bus_op}）<br>
           ・昼間運行: <strong>約${p.bus_freq}本/時</strong>（約${p.bus_headway}分間隔）<br>
-          ・利便水準: <strong>${p.bus_service_level}</strong>（頻度係数 <strong>${p.bus_freq_penalty}倍</strong>）<br>
-          ・情報源: <span style="color:#2563eb;">${p.bus_data_source || '推計'}</span>
+          ・利便水準: <strong>${p.bus_service_level}</strong>（係数 <strong>${p.bus_freq_penalty}倍</strong>）
         </div>
       ` : '';
 
       const stFreqDetail = p.station_name ? `
         <div style="margin-top: 4px; padding-top: 4px; border-top: 1px dashed #cbd5e1; font-size: 0.68rem; color: #475569;">
-          🚆 最寄り: <strong>${p.station_name}駅</strong>（${p.station_line} / ${p.station_op}）<br>
+          🚆 最寄り鉄道: <strong>${p.station_name}駅</strong>（${p.station_line} / ${p.station_op}）<br>
           ・昼間運行: <strong>約${p.station_freq}本/時</strong>（約${p.station_headway}分間隔）<br>
-          ・利便水準: <strong>${p.station_service_level}</strong>（頻度係数 <strong>${p.station_freq_penalty}倍</strong>）
+          ・利便水準: <strong>${p.station_service_level}</strong>（係数 <strong>${p.station_freq_penalty}倍</strong>）
         </div>
       ` : '';
+
+      // Phase 4 生活利便アクセス診断ブロック
+      const shopAlert = p.is_shopping_desert ? 
+        `<span style="color:#dc2626; font-weight:700;">⚠️ 買い物困難 (スーパー1km超・徒歩約${Math.round((p.d_supermarket||0)/80)}分)</span>` : 
+        `<span style="color:#16a34a; font-weight:700;">✅ 買い物圏内 (スーパー徒歩約${Math.round((p.d_supermarket||0)/80)}分)</span>`;
+
+      const medAlert = p.is_medical_desert ? 
+        `<span style="color:#dc2626; font-weight:700;">⚠️ 医療アクセス困難 (1.5km超・徒歩約${medWalkMin}分)</span>` : 
+        `<span style="color:#16a34a; font-weight:700;">✅ 医療徒歩圏内 (徒歩約${medWalkMin}分)</span>`;
+
+      const lifeAccessDetail = `
+        <div style="margin-top: 6px; padding: 6px; background: #e2e8f0; border-radius: 4px; font-size: 0.68rem;">
+          <div style="font-weight:700; color:#1e293b; margin-bottom:2px;">🏥 生活利便アクセス診断 (Phase 4):</div>
+          ・買い物: ${shopAlert}<br>
+          &nbsp;&nbsp;最寄りスーパー: <strong>${p.supermarket_name || p.comm_name}</strong> (${p.d_supermarket || p.d_comm}m)<br>
+          ・医療: ${medAlert}<br>
+          &nbsp;&nbsp;最寄り医療機関: <strong>${p.med_name}</strong> (${p.d_med}m)<br>
+          &nbsp;&nbsp;最寄り総合病院: <strong>${p.hosp_name}</strong> (${p.d_hosp}m / 車約${Math.round((p.d_hosp||0)/500)}分)
+        </div>
+      `;
 
       breakdownEl.innerHTML = `
         高齢者 <strong>${p.elderly}人</strong><br>
@@ -524,6 +597,7 @@
         ＝ <strong>${p.gap_score.toLocaleString()}</strong>
         ${busFreqDetail}
         ${stFreqDetail}
+        ${lifeAccessDetail}
       `;
     }
 
@@ -657,6 +731,79 @@
         document.getElementById('load-badge').className = 'badge badge-red';
       });
 
+    // 医療機関詳細表示（施設マーカークリック時）
+    function showMedicalDetail(p) {
+      document.getElementById('detail-empty').style.display = 'none';
+      const panel = document.getElementById('detail-panel');
+      panel.style.display = 'block';
+
+      const isHospital = p.category_code === '1' || p.category === '病院';
+      const icon = isHospital ? '🏥' : (p.category === '歯科診療所' ? '🦷' : '🩺');
+      document.getElementById('det-title').textContent = `${icon} ${p.name}`;
+      
+      const riskEl = document.getElementById('det-risk');
+      riskEl.textContent = `施設区分: ${p.category}`;
+      riskEl.style.color = isHospital ? '#e11d48' : '#0284c7';
+
+      document.getElementById('det-pop').textContent = `所在地: ${p.address || '愛知県内'}`;
+      document.getElementById('det-aging').textContent = `診療科目: ${p.departments ? p.departments.substring(0, 30) + '...' : '一般'}`;
+      document.getElementById('det-bus').textContent = `公共医療インフラ`;
+      document.getElementById('det-station').textContent = `データ元: 国土数値情報 (P04)`;
+      document.getElementById('det-med').textContent = `${p.category} (${p.name})`;
+      document.getElementById('det-comm').textContent = `-`;
+      
+      const scoreEl = document.getElementById('det-gapscore');
+      scoreEl.textContent = isHospital ? '地域中核・入院機能' : '一次診療・クリニック';
+      scoreEl.style.fontSize = '0.9rem';
+      scoreEl.style.color = riskEl.style.color;
+
+      const breakdownEl = document.getElementById('det-breakdown');
+      breakdownEl.innerHTML = `
+        <strong>【医療機関スペック】</strong><br>
+        ・施設名: <strong>${p.name}</strong><br>
+        ・区分: <strong>${p.category}</strong><br>
+        ・所在地: ${p.address || '-'}<br>
+        ・主な診療科: ${p.departments || '情報なし'}<br>
+        <span style="color:#64748b; font-size:0.68rem;">※高齢者の日常通院および急性期受診における基幹インフラ</span>
+      `;
+    }
+
+    // 商業施設詳細表示（店舗マーカークリック時）
+    function showCommercialDetail(p) {
+      document.getElementById('detail-empty').style.display = 'none';
+      const panel = document.getElementById('detail-panel');
+      panel.style.display = 'block';
+
+      const isSm = p.category === 'スーパーマーケット';
+      const icon = isSm ? '🛒' : '💊';
+      document.getElementById('det-title').textContent = `${icon} ${p.name}`;
+      
+      const riskEl = document.getElementById('det-risk');
+      riskEl.textContent = `業態: ${p.category} ${p.brand ? `(${p.brand})` : ''}`;
+      riskEl.style.color = isSm ? '#ea580c' : '#8b5cf6';
+
+      document.getElementById('det-pop').textContent = `業態区分: ${p.category}`;
+      document.getElementById('det-aging').textContent = `ブランド: ${p.brand || '一般'}`;
+      document.getElementById('det-bus').textContent = `徒歩圏基準: 1,000m (徒歩約15分)`;
+      document.getElementById('det-station').textContent = `食料品・日用品アクセス拠点`;
+      document.getElementById('det-med').textContent = `-`;
+      document.getElementById('det-comm').textContent = `${p.name} (${p.category})`;
+      
+      const scoreEl = document.getElementById('det-gapscore');
+      scoreEl.textContent = isSm ? '生活必需・食料品供給拠点' : '医薬品・日用品供給拠点';
+      scoreEl.style.fontSize = '0.9rem';
+      scoreEl.style.color = riskEl.style.color;
+
+      const breakdownEl = document.getElementById('det-breakdown');
+      breakdownEl.innerHTML = `
+        <strong>【商業施設・生活拠点スペック】</strong><br>
+        ・店舗名: <strong>${p.name}</strong><br>
+        ・業態: <strong>${p.category}</strong><br>
+        ・ブランド: ${p.brand || '-'}<br>
+        <span style="color:#64748b; font-size:0.68rem;">※農林水産省「食料品アクセス問題」評価基準（徒歩1km）対象店舗</span>
+      `;
+    }
+
     // 4. サマリー指標の読み込み
     fetch('data/summary_metrics.json')
       .then(res => res.json())
@@ -664,8 +811,13 @@
         document.getElementById('kpi-critical-mesh').textContent = `${data.critical_mesh_count} 箇所`;
         document.getElementById('kpi-critical-elderly').textContent = data.critical_elderly.toLocaleString();
         document.getElementById('kpi-blank-mesh').textContent = `${data.blank_mesh_count} 箇所`;
-        document.getElementById('kpi-transit').textContent = `${data.bus_stop_count.toLocaleString()} / ${data.station_count}`;
-        document.getElementById('kpi-pop').textContent = `${data.total_population.toLocaleString()} 人`;
+        if (document.getElementById('kpi-double-desert')) {
+          document.getElementById('kpi-double-desert').textContent = `${data.double_desert_mesh_count || 819} 箇所`;
+          document.getElementById('kpi-double-elderly').textContent = (data.double_desert_elderly || 87374).toLocaleString();
+        }
+        if (document.getElementById('kpi-facilities')) {
+          document.getElementById('kpi-facilities').textContent = `${(data.medical_count || 9607).toLocaleString()} / ${(data.commercial_count || 1516).toLocaleString()}`;
+        }
       })
       .catch(err => console.warn('サマリー読込待機:', err));
 
@@ -733,7 +885,137 @@
         });
     }
 
-    // レイヤーイベント
+    // 6. 医療機関データのオンデマンド読み込み (Phase 4: 9,607件)
+    let medLoaded = false;
+    function loadMedicalFacilities() {
+      if (medLoaded) return;
+      document.getElementById('load-badge').textContent = '医療施設読込中...';
+      fetch('data/aichi_medical_facilities.csv')
+        .then(res => res.text())
+        .then(csv => {
+          Papa.parse(csv, {
+            header: true,
+            skipEmptyLines: true,
+            complete: results => {
+              results.data.forEach(m => {
+                const lat = parseFloat(m.lat);
+                const lon = parseFloat(m.lon);
+                if (isNaN(lat) || isNaN(lon)) return;
+
+                const isHospital = m.category_code === '1' || m.category === '病院';
+                const isClinic = m.category_code === '2' || m.category === '診療所・クリニック';
+
+                if (isHospital) {
+                  const marker = L.circleMarker([lat, lon], {
+                    radius: 6,
+                    fillColor: '#e11d48',
+                    color: '#881337',
+                    weight: 1.5,
+                    fillOpacity: 0.9
+                  });
+                  marker.bindPopup(`
+                    <div style="font-size:0.88rem; min-width:210px;">
+                      <strong style="color:#e11d48; font-size:0.95rem;">🏥 ${m.name}</strong><br/>
+                      <span class="badge" style="background:#ffe4e6; color:#9f1239;">総合病院 / 中核医療</span>
+                      <div style="margin-top:6px; font-size:0.75rem; color:#475569; line-height:1.4;">
+                        <div>📍 ${m.address || '-'}</div>
+                        <div style="margin-top:3px;">🩺 <strong>診療科目:</strong><br>${m.departments ? m.departments.substring(0, 60) + '...' : '-'}</div>
+                      </div>
+                    </div>
+                  `);
+                  marker.on('click', () => showMedicalDetail(m));
+                  hospitalLayer.addLayer(marker);
+                } else if (isClinic) {
+                  const marker = L.circleMarker([lat, lon], {
+                    radius: 3.5,
+                    fillColor: '#0284c7',
+                    color: '#ffffff',
+                    weight: 0.8,
+                    fillOpacity: 0.85
+                  });
+                  marker.bindPopup(`
+                    <div style="font-size:0.85rem; min-width:190px;">
+                      <strong style="color:#0284c7;">🩺 ${m.name}</strong><br/>
+                      <span class="badge" style="background:#e0f2fe; color:#0369a1;">診療所・クリニック</span>
+                      <div style="margin-top:4px; font-size:0.73rem; color:#475569;">
+                        <div>📍 ${m.address || '-'}</div>
+                        <div>🩺 ${m.departments || '-'}</div>
+                      </div>
+                    </div>
+                  `);
+                  marker.on('click', () => showMedicalDetail(m));
+                  clinicLayer.addLayer(marker);
+                }
+              });
+              medLoaded = true;
+              document.getElementById('load-badge').textContent = '全域反映完了';
+            }
+          });
+        });
+    }
+
+    // 7. 商業施設データのオンデマンド読み込み (Phase 4: 1,516件)
+    let commLoaded = false;
+    function loadCommercialFacilities() {
+      if (commLoaded) return;
+      document.getElementById('load-badge').textContent = '商業施設読込中...';
+      fetch('data/aichi_commercial_facilities.csv')
+        .then(res => res.text())
+        .then(csv => {
+          Papa.parse(csv, {
+            header: true,
+            skipEmptyLines: true,
+            complete: results => {
+              results.data.forEach(c => {
+                const lat = parseFloat(c.lat);
+                const lon = parseFloat(c.lon);
+                if (isNaN(lat) || isNaN(lon)) return;
+
+                const isSm = c.category === 'スーパーマーケット';
+                const fillColor = isSm ? '#ea580c' : '#9333ea';
+                const icon = isSm ? '🛒' : '💊';
+
+                const marker = L.circleMarker([lat, lon], {
+                  radius: isSm ? 5 : 4,
+                  fillColor: fillColor,
+                  color: '#ffffff',
+                  weight: 1,
+                  fillOpacity: 0.9
+                });
+
+                marker.bindPopup(`
+                  <div style="font-size:0.88rem; min-width:190px;">
+                    <strong style="color:${fillColor};">${icon} ${c.name}</strong><br/>
+                    <span class="badge" style="background:${isSm ? '#ffedd5' : '#f3e8ff'}; color:${fillColor};">${c.category}</span>
+                    ${c.brand ? `<span style="font-size:0.75rem; color:#64748b; margin-left:4px;">(${c.brand})</span>` : ''}
+                    <div style="margin-top:5px; font-size:0.73rem; color:#475569;">
+                      徒歩圏基準: 1,000m (徒歩約15分)
+                    </div>
+                  </div>
+                `);
+
+                marker.on('click', () => showCommercialDetail(c));
+                commercialLayer.addLayer(marker);
+
+                if (isSm) {
+                  const buffer = L.circle([lat, lon], {
+                    radius: 1000,
+                    color: '#ea580c',
+                    weight: 1,
+                    fillColor: '#ffedd5',
+                    fillOpacity: 0.04
+                  });
+                  supermarketBufferLayer.addLayer(buffer);
+                }
+              });
+              commLoaded = true;
+              document.getElementById('load-badge').textContent = '全域反映完了';
+            }
+          });
+        });
+    }
+
+    // レイヤーイベントリスナー
     document.getElementById('layer-mesh').addEventListener('change', e => {
       if (e.target.checked) map.addLayer(meshLayer);
       else map.removeLayer(meshLayer);
@@ -762,6 +1044,38 @@
         map.removeLayer(busBufferLayer);
       }
     });
+    document.getElementById('layer-hospitals').addEventListener('change', e => {
+      if (e.target.checked) {
+        loadMedicalFacilities();
+        map.addLayer(hospitalLayer);
+      } else {
+        map.removeLayer(hospitalLayer);
+      }
+    });
+    document.getElementById('layer-clinics').addEventListener('change', e => {
+      if (e.target.checked) {
+        loadMedicalFacilities();
+        map.addLayer(clinicLayer);
+      } else {
+        map.removeLayer(clinicLayer);
+      }
+    });
+    document.getElementById('layer-commercial').addEventListener('change', e => {
+      if (e.target.checked) {
+        loadCommercialFacilities();
+        map.addLayer(commercialLayer);
+      } else {
+        map.removeLayer(commercialLayer);
+      }
+    });
+    document.getElementById('layer-supermarket-buffer').addEventListener('change', e => {
+      if (e.target.checked) {
+        loadCommercialFacilities();
+        map.addLayer(supermarketBufferLayer);
+      } else {
+        map.removeLayer(supermarketBufferLayer);
+      }
+    });
 
     // フィルタ切り替えイベント
     document.querySelectorAll('input[name="level-filter"]').forEach(radio => {
@@ -769,7 +1083,7 @@
     });
     document.getElementById('filter-elderly-dense').addEventListener('change', renderMeshLayer);
 
-    // 凡例 (5段階グラデーション)
+    // 凡例 (5段階グラデーション + POI)
     const legend = L.control({ position: 'bottomright' });
     legend.onAdd = function() {
       const div = L.DomUtil.create('div', 'legend');
@@ -781,8 +1095,13 @@
         <div class="legend-item"><div class="legend-box" style="background:#22c55e;"></div> 良好・軽微 (200 ≤ MGS < 600)</div>
         <div class="legend-item"><div class="legend-box" style="background:#2563eb;"></div> 極めて良好 (MGS < 200)</div>
         <div style="border-top:1px solid #e2e8f0; margin:5px 0;"></div>
-        <div class="legend-item"><div class="legend-box" style="background:#059669; border-radius:50%;"></div> 鉄道駅 (800m圏)</div>
-        <div class="legend-item"><div class="legend-box" style="background:#2563eb; border-radius:50%;"></div> バス停 (400m圏)</div>
+        <div class="legend-title" style="font-size:0.7rem; color:#64748b;">公共交通 & 生活POI</div>
+        <div class="legend-item"><div class="legend-box" style="background:#059669; border-radius:50%;"></div> 🚆 鉄道駅 (800m圏)</div>
+        <div class="legend-item"><div class="legend-box" style="background:#2563eb; border-radius:50%;"></div> 🚏 バス停 (400m圏)</div>
+        <div class="legend-item"><div class="legend-box" style="background:#e11d48; border-radius:50%;"></div> 🏥 総合病院 (321施設)</div>
+        <div class="legend-item"><div class="legend-box" style="background:#0284c7; border-radius:50%;"></div> 🩺 診療所 (5,540施設)</div>
+        <div class="legend-item"><div class="legend-box" style="background:#ea580c; border-radius:50%;"></div> 🛒 スーパー (1,000m圏)</div>
+        <div class="legend-item"><div class="legend-box" style="background:#9333ea; border-radius:50%;"></div> 💊 ドラッグストア</div>
       `;
       return div;
     };

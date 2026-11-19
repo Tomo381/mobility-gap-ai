@@ -15,6 +15,57 @@ import xml.etree.ElementTree as ET
 import pandas as pd
 import numpy as np
 
+def haversine_m(lat1, lon1, lat2, lon2):
+    """2点間の距離をメートル単位で計算 (Haversine formula)"""
+    R = 6371000.0
+    phi1 = math.radians(lat1)
+    phi2 = math.radians(lat2)
+    delta_phi = math.radians(lat2 - lat1)
+    delta_lambda = math.radians(lon2 - lon1)
+    a = math.sin(delta_phi / 2.0) ** 2 + math.cos(phi1) * math.cos(phi2) * (math.sin(delta_lambda / 2.0) ** 2)
+    c = 2.0 * math.atan2(math.sqrt(a), math.sqrt(1.0 - a))
+    return R * c
+
+class SpatialGrid:
+    """緯度経度ベースの空間インデックス（高速近傍探索用）"""
+    def __init__(self, cell_size_deg=0.03):
+        self.cell_size = cell_size_deg
+        self.grid = {}
+
+    def _cell_key(self, lat, lon):
+        return (int(lat / self.cell_size), int(lon / self.cell_size))
+
+    def insert(self, item):
+        lat = item['lat']
+        lon = item['lon']
+        key = self._cell_key(lat, lon)
+        if key not in self.grid:
+            self.grid[key] = []
+        self.grid[key].append(item)
+
+    def find_nearest(self, lat, lon, filter_fn=None):
+        ck_lat, ck_lon = self._cell_key(lat, lon)
+        min_dist = float('inf')
+        nearest_item = None
+        for ring in range(0, 35):
+            for d_lat in range(-ring, ring + 1):
+                for d_lon in range(-ring, ring + 1):
+                    if max(abs(d_lat), abs(d_lon)) != ring:
+                        continue
+                    key = (ck_lat + d_lat, ck_lon + d_lon)
+                    if key in self.grid:
+                        for item in self.grid[key]:
+                            if filter_fn and not filter_fn(item):
+                                continue
+                            d = haversine_m(lat, lon, item['lat'], item['lon'])
+                            if d < min_dist:
+                                min_dist = d
+                                nearest_item = item
+            approx_min_dist_to_next = max(0, (ring - 1)) * self.cell_size * 80000.0
+            if nearest_item is not None and ring >= 2 and min_dist <= approx_min_dist_to_next:
+                break
+        return nearest_item, min_dist
+
 def meshcode_to_bbox(code_str):
     """
     9桁の500mメッシュコード（4次メッシュ）から緯度経度バウンディングボックスを計算
@@ -482,6 +533,57 @@ def main():
     st_lats = np.array([s["lat"] for s in station_points], dtype=np.float64)
     st_lons = np.array([s["lon"] for s in station_points], dtype=np.float64)
 
+    # 医療機関・商業施設POIの空間インデックス構築 (Phase 4)
+    print("\n=== [Step 4] 医療機関・商業施設POIデータの読み込みと空間インデックス構築 ===")
+    grid_med_all = SpatialGrid(cell_size_deg=0.03)
+    grid_hospital = SpatialGrid(cell_size_deg=0.05)
+    grid_comm_all = SpatialGrid(cell_size_deg=0.03)
+    grid_supermarket = SpatialGrid(cell_size_deg=0.04)
+    medical_items = []
+    commercial_items = []
+
+    med_file = os.path.join(data_dir, "aichi_medical_facilities.geojson")
+    if os.path.exists(med_file):
+        with open(med_file, "r", encoding="utf-8") as f:
+            med_geo = json.load(f)
+        for feat in med_geo["features"]:
+            p = feat.get("properties", {})
+            coords = feat.get("geometry", {}).get("coordinates", [])
+            if len(coords) >= 2:
+                item = {
+                    "name": p.get("name", ""),
+                    "category_code": p.get("category_code", 2),
+                    "category": p.get("category", ""),
+                    "departments": p.get("departments", ""),
+                    "lat": coords[1],
+                    "lon": coords[0]
+                }
+                medical_items.append(item)
+                grid_med_all.insert(item)
+                if item["category_code"] == 1:
+                    grid_hospital.insert(item)
+        print(f"医療機関データインデックス完了: {len(medical_items):,} 件")
+
+    comm_file = os.path.join(data_dir, "aichi_commercial_facilities.geojson")
+    if os.path.exists(comm_file):
+        with open(comm_file, "r", encoding="utf-8") as f:
+            comm_geo = json.load(f)
+        for feat in comm_geo["features"]:
+            p = feat.get("properties", {})
+            coords = feat.get("geometry", {}).get("coordinates", [])
+            if len(coords) >= 2:
+                item = {
+                    "name": p.get("name", ""),
+                    "category": p.get("category", ""),
+                    "lat": coords[1],
+                    "lon": coords[0]
+                }
+                commercial_items.append(item)
+                grid_comm_all.insert(item)
+                if item["category"] == "スーパーマーケット":
+                    grid_supermarket.insert(item)
+        print(f"商業施設データインデックス完了: {len(commercial_items):,} 件")
+
     # 有効な居住メッシュの抽出
     valid_meshes = []
     for idx, row in df_mesh.iterrows():
@@ -661,6 +763,19 @@ def main():
             [round(m["min_lon"], 5), round(m["min_lat"], 5)]
         ]]
 
+        # 生活利便施設（医療・商業）最寄り計算 (Phase 4)
+        c_lat_m = m["c_lat"]
+        c_lon_m = m["c_lon"]
+        near_med, d_med = grid_med_all.find_nearest(c_lat_m, c_lon_m, filter_fn=lambda x: x["category_code"] in [1, 2])
+        near_hosp, d_hosp = grid_hospital.find_nearest(c_lat_m, c_lon_m)
+        near_comm, d_comm = grid_comm_all.find_nearest(c_lat_m, c_lon_m)
+        near_sm, d_sm = grid_supermarket.find_nearest(c_lat_m, c_lon_m)
+
+        d_med_int = int(round(d_med)) if near_med else 9999
+        d_hosp_int = int(round(d_hosp)) if near_hosp else 9999
+        d_comm_int = int(round(d_comm)) if near_comm else 9999
+        d_sm_int = int(round(d_sm)) if near_sm else 9999
+
         mesh_features.append({
             "type": "Feature",
             "geometry": {
@@ -691,6 +806,19 @@ def main():
                 "station_headway": st_headway,
                 "station_freq_penalty": st_penalty_rate,
                 "station_service_level": st_level,
+                "d_med": d_med_int,
+                "med_name": near_med["name"] if near_med else "",
+                "med_cat": near_med["category"] if near_med else "",
+                "med_dept": near_med["departments"] if near_med else "",
+                "d_hosp": d_hosp_int,
+                "hosp_name": near_hosp["name"] if near_hosp else "",
+                "d_comm": d_comm_int,
+                "comm_name": near_comm["name"] if near_comm else "",
+                "comm_cat": near_comm["category"] if near_comm else "",
+                "d_supermarket": d_sm_int,
+                "supermarket_name": near_sm["name"] if near_sm else "",
+                "is_shopping_desert": d_sm_int >= 1000,
+                "is_medical_desert": d_med_int >= 1500,
                 "gap_score": gap_score,
                 "gap_level": gap_level,
                 "risk_label": risk_label,
@@ -713,6 +841,13 @@ def main():
             json.dump({"type": "FeatureCollection", "features": mesh_features}, f, ensure_ascii=False)
         print(f"メッシュGeoJSON保存完了: {mesh_out_file}")
 
+    med_desert_cnt = sum(1 for feat in mesh_features if feat["properties"].get("is_medical_desert"))
+    med_desert_eld = sum(feat["properties"].get("elderly", 0) for feat in mesh_features if feat["properties"].get("is_medical_desert"))
+    shop_desert_cnt = sum(1 for feat in mesh_features if feat["properties"].get("is_shopping_desert"))
+    shop_desert_eld = sum(feat["properties"].get("elderly", 0) for feat in mesh_features if feat["properties"].get("is_shopping_desert"))
+    double_desert_cnt = sum(1 for feat in mesh_features if feat["properties"].get("is_shopping_desert") and feat["properties"].get("gap_level", 1) >= 4)
+    double_desert_eld = sum(feat["properties"].get("elderly", 0) for feat in mesh_features if feat["properties"].get("is_shopping_desert") and feat["properties"].get("gap_level", 1) >= 4)
+
     summary_data = {
         "region_name": "愛知県全域",
         "mesh_count": len(mesh_features),
@@ -728,14 +863,27 @@ def main():
         "station_freq_summary": rail_level_counts,
         "bus_stop_count": len(bus_stops),
         "bus_freq_summary": bus_level_counts,
-        "bus_data_source_summary": bus_source_counts
+        "bus_data_source_summary": bus_source_counts,
+        "medical_count": len(medical_items),
+        "hospital_count": sum(1 for m in medical_items if m.get("category_code") == 1),
+        "clinic_count": sum(1 for m in medical_items if m.get("category_code") == 2),
+        "dental_count": sum(1 for m in medical_items if m.get("category_code") == 3),
+        "commercial_count": len(commercial_items),
+        "supermarket_count": sum(1 for c in commercial_items if c.get("category") == "スーパーマーケット"),
+        "drugstore_count": sum(1 for c in commercial_items if c.get("category") == "ドラッグストア"),
+        "medical_desert_mesh_count": med_desert_cnt,
+        "medical_desert_elderly": med_desert_eld,
+        "shopping_desert_mesh_count": shop_desert_cnt,
+        "shopping_desert_elderly": shop_desert_eld,
+        "double_desert_mesh_count": double_desert_cnt,
+        "double_desert_elderly": double_desert_eld
     }
     summary_file = os.path.join(data_dir, "summary_metrics.json")
     with open(summary_file, "w", encoding="utf-8") as f:
         json.dump(summary_data, f, ensure_ascii=False, indent=2)
     print(f"サマリー指標保存完了: {summary_file}")
 
-    print("\n[SUCCESS] 愛知県全域のバス・鉄道W運行頻度加味前処理・新MGS算出がすべて完了しました！")
+    print("\n[SUCCESS] 愛知県全域のバス・鉄道W運行頻度加味および医療・商業POI統合前処理がすべて完了しました！")
 
 if __name__ == "__main__":
     main()

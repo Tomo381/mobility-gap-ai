@@ -40,5 +40,18 @@
   "bus_data_source_summary": {
     "実GTFSダイヤ (名古屋市交通局)": 1593,
     "系統推計マスター (P11)": 7528
-  }
+  },
+  "medical_count": 9607,
+  "hospital_count": 321,
+  "clinic_count": 5540,
+  "dental_count": 3746,
+  "commercial_count": 1516,
+  "supermarket_count": 1105,
+  "drugstore_count": 411,
+  "medical_desert_mesh_count": 2716,
+  "medical_desert_elderly": 38457,
+  "shopping_desert_mesh_count": 8030,
+  "shopping_desert_elderly": 576812,
+  "double_desert_mesh_count": 819,
+  "double_desert_elderly": 87374
 }
