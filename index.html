@@ -244,15 +244,345 @@
     }
     .badge-green { background: #dcfce7; color: #166534; }
     .badge-red { background: #fee2e2; color: #991b1b; }
+
+    /* ===== レスポンシブ対応スタイル ===== */
+    
+    /* モバイル専用トップバー（初期非表示） */
+    #mobile-topbar {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      height: 54px;
+      padding: 0 14px;
+      background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%);
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      z-index: 1100;
+      flex-shrink: 0;
+    }
+    .mobile-brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .mobile-logo {
+      font-size: 1.25rem;
+    }
+    .mobile-title {
+      font-size: 0.96rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      line-height: 1.15;
+    }
+    .mobile-subtitle {
+      font-size: 0.64rem;
+      color: #93c5fd;
+      line-height: 1.15;
+    }
+    .mobile-menu-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 12px;
+      background: rgba(255, 255, 255, 0.16);
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      border-radius: 6px;
+      color: #ffffff;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .mobile-menu-btn:active {
+      background: rgba(255, 255, 255, 0.28);
+    }
+
+    /* サイドバー開閉用閉じるボタン */
+    .sidebar-close-btn {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.15);
+      color: #ffffff;
+      border: none;
+      cursor: pointer;
+      font-size: 1.1rem;
+      transition: background 0.2s;
+      flex-shrink: 0;
+      line-height: 1;
+    }
+    .sidebar-close-btn:active {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    /* サイドバー用バックドロップ */
+    #sidebar-backdrop {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(15, 23, 42, 0.45);
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(2px);
+      z-index: 1999;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+      pointer-events: none;
+    }
+    #sidebar-backdrop.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* モバイル用クイック詳細ボトムシート */
+    #mobile-detail-sheet {
+      display: none;
+      position: fixed;
+      left: 12px;
+      right: 12px;
+      bottom: 12px;
+      background: rgba(255, 255, 255, 0.98);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border-radius: 12px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.22);
+      border: 1px solid #cbd5e1;
+      z-index: 1200;
+      padding: 10px 14px 12px;
+      transform: translateY(140%);
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    #mobile-detail-sheet.active {
+      transform: translateY(0);
+    }
+    .sheet-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .sheet-title-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.82rem;
+      color: #0f172a;
+    }
+    .sheet-badge {
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 0.65rem;
+      font-weight: 700;
+    }
+    .sheet-close-btn {
+      background: #f1f5f9;
+      border: none;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      color: #64748b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+    .sheet-kpis {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    .sheet-kpi-item {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 4px 6px;
+      text-align: center;
+    }
+    .sheet-kpi-label {
+      font-size: 0.6rem;
+      color: #64748b;
+      display: block;
+    }
+    .sheet-kpi-val {
+      font-size: 0.74rem;
+      font-weight: 700;
+      color: #0f172a;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: block;
+    }
+    .sheet-action-btn {
+      width: 100%;
+      padding: 8px;
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+    .sheet-action-btn:active {
+      filter: brightness(0.9);
+    }
+
+    /* 凡例折りたたみ対応 */
+    .legend-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .legend-toggle-btn {
+      background: none;
+      border: none;
+      font-size: 0.72rem;
+      color: #64748b;
+      cursor: pointer;
+      padding: 0 2px;
+      line-height: 1;
+    }
+
+    /* ===== タブレットブレークポイント (769px 〜 1024px) ===== */
+    @media (max-width: 1024px) and (min-width: 769px) {
+      #sidebar {
+        width: 340px;
+      }
+    }
+
+    /* ===== モバイルブレークポイント (< 768px) ===== */
+    @media (max-width: 768px) {
+      body {
+        flex-direction: column;
+      }
+      #mobile-topbar {
+        display: flex;
+      }
+      #sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 88%;
+        max-width: 390px;
+        height: 100%;
+        z-index: 2000;
+        transform: translateX(-100%);
+        transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+        box-shadow: 4px 0 24px rgba(0,0,0,0.25);
+      }
+      #sidebar.open {
+        transform: translateX(0);
+      }
+      .sidebar-close-btn {
+        display: flex;
+      }
+      #sidebar-backdrop {
+        display: block;
+      }
+      #map {
+        width: 100vw;
+        height: calc(100vh - 54px);
+        flex: 1;
+      }
+      #mobile-detail-sheet {
+        display: block;
+      }
+
+      /* 凡例のモバイル調整 */
+      .legend {
+        max-width: 210px;
+        min-width: unset;
+        padding: 6px 10px;
+        font-size: 0.68rem;
+        margin-right: 8px;
+        margin-bottom: 8px;
+      }
+      .legend.collapsed .legend-body {
+        display: none;
+      }
+      
+      /* タッチ操作の向上 */
+      .checkbox-label {
+        padding: 8px 6px;
+        font-size: 0.85rem;
+        border-radius: 4px;
+      }
+      .checkbox-label:active {
+        background: #f1f5f9;
+      }
+      .kpi-card {
+        padding: 8px 8px;
+      }
+      .kpi-title {
+        font-size: 0.68rem;
+      }
+      .kpi-value {
+        font-size: 1.0rem;
+      }
+      .formula-box {
+        font-size: 0.72rem;
+        padding: 8px;
+      }
+      .formula-code {
+        font-size: 0.68rem;
+      }
+    }
+
+    /* 超小型端末 (< 400px) */
+    @media (max-width: 400px) {
+      .sheet-kpis {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .kpi-grid {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 <body>
+  <!-- モバイル用バックドロップ -->
+  <div id="sidebar-backdrop"></div>
+
+  <!-- モバイル専用トップバー -->
+  <div id="mobile-topbar">
+    <div class="mobile-brand">
+      <span class="mobile-logo">🗺️</span>
+      <div>
+        <div class="mobile-title">Mobility Gap AI</div>
+        <div class="mobile-subtitle">愛知県 移動格差・交通アクセシビリティ分析</div>
+      </div>
+    </div>
+    <button id="mobile-menu-btn" class="mobile-menu-btn" aria-label="メニューを開く">
+      <span>⚙️ 条件・詳細</span>
+    </button>
+  </div>
 
   <!-- サイドバー -->
   <div id="sidebar">
     <div class="header">
-      <h1>Mobility Gap AI</h1>
-      <p>愛知県全域 移動格差・交通アクセシビリティ分析</p>
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
+        <div>
+          <h1>Mobility Gap AI</h1>
+          <p>愛知県全域 移動格差・交通アクセシビリティ分析</p>
+        </div>
+        <button id="sidebar-close-btn" class="sidebar-close-btn" aria-label="閉じる">✕</button>
+      </div>
     </div>
 
     <div class="content">
@@ -439,11 +769,110 @@
   <!-- 地図領域 -->
   <div id="map"></div>
 
+  <!-- モバイル用クイック詳細ボトムシート -->
+  <div id="mobile-detail-sheet">
+    <div class="sheet-header">
+      <div class="sheet-title-group">
+        <span class="sheet-badge" id="sheet-risk-badge" style="background:#dc2626; color:#fff;">深刻</span>
+        <strong id="sheet-title">500mメッシュ</strong>
+      </div>
+      <button id="sheet-close-btn" class="sheet-close-btn" aria-label="閉じる">✕</button>
+    </div>
+    <div class="sheet-kpis">
+      <div class="sheet-kpi-item">
+        <span class="sheet-kpi-label">高齢者人口</span>
+        <span class="sheet-kpi-val" id="sheet-elderly">-</span>
+      </div>
+      <div class="sheet-kpi-item">
+        <span class="sheet-kpi-label">MGS指数</span>
+        <span class="sheet-kpi-val" id="sheet-mgs">-</span>
+      </div>
+      <div class="sheet-kpi-item">
+        <span class="sheet-kpi-label">最寄り駅</span>
+        <span class="sheet-kpi-val" id="sheet-station">-</span>
+      </div>
+      <div class="sheet-kpi-item">
+        <span class="sheet-kpi-label">最寄りバス</span>
+        <span class="sheet-kpi-val" id="sheet-bus">-</span>
+      </div>
+    </div>
+    <button id="sheet-open-detail-btn" class="sheet-action-btn">
+      📊 全内訳・生活アクセス診断を見る ❯
+    </button>
+  </div>
+
   <script>
+    // ===== レスポンシブ用UI制御 =====
+    const sidebar = document.getElementById('sidebar');
+    const backdrop = document.getElementById('sidebar-backdrop');
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const sidebarCloseBtn = document.getElementById('sidebar-close-btn');
+    const mobileSheet = document.getElementById('mobile-detail-sheet');
+    const sheetCloseBtn = document.getElementById('sheet-close-btn');
+    const sheetOpenDetailBtn = document.getElementById('sheet-open-detail-btn');
+
+    function openSidebar() {
+      if (sidebar) sidebar.classList.add('open');
+      if (backdrop) backdrop.classList.add('active');
+      setTimeout(() => { if (map) map.invalidateSize(); }, 320);
+    }
+
+    function closeSidebar() {
+      if (sidebar) sidebar.classList.remove('open');
+      if (backdrop) backdrop.classList.remove('active');
+      setTimeout(() => { if (map) map.invalidateSize(); }, 320);
+    }
+
+    if (mobileMenuBtn) mobileMenuBtn.addEventListener('click', openSidebar);
+    if (sidebarCloseBtn) sidebarCloseBtn.addEventListener('click', closeSidebar);
+    if (backdrop) backdrop.addEventListener('click', closeSidebar);
+
+    function showMobileSheet(info) {
+      if (!mobileSheet) return;
+      document.getElementById('sheet-title').textContent = info.title || '地点詳細';
+      
+      const badge = document.getElementById('sheet-risk-badge');
+      badge.textContent = info.badgeText || '詳細';
+      badge.style.background = info.badgeColor || '#2563eb';
+      badge.style.color = '#ffffff';
+
+      document.getElementById('sheet-elderly').textContent = info.elderly || '-';
+      document.getElementById('sheet-mgs').textContent = info.mgs || '-';
+      document.getElementById('sheet-station').textContent = info.station || '-';
+      document.getElementById('sheet-bus').textContent = info.bus || '-';
+
+      mobileSheet.classList.add('active');
+    }
+
+    function hideMobileSheet() {
+      if (mobileSheet) mobileSheet.classList.remove('active');
+    }
+
+    if (sheetCloseBtn) sheetCloseBtn.addEventListener('click', hideMobileSheet);
+    if (sheetOpenDetailBtn) {
+      sheetOpenDetailBtn.addEventListener('click', () => {
+        openSidebar();
+        const detailCard = document.getElementById('detail-card');
+        if (detailCard) {
+          detailCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    }
+
     // 1. 地図初期化（Canvas レンダラー優先で万単位のメッシュ・マーカーも高速描画）
     const map = L.map('map', {
       preferCanvas: true
     }).setView([35.050, 137.150], 10);
+
+    // 地図背景クリックでモバイルシートを閉じる
+    map.on('click', () => {
+      hideMobileSheet();
+    });
+
+    // ウィンドウリサイズ時のLeaflet地図再描画
+    window.addEventListener('resize', () => {
+      map.invalidateSize();
+    });
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 18,
@@ -599,6 +1028,17 @@
         ${stFreqDetail}
         ${lifeAccessDetail}
       `;
+
+      // モバイルクイックシート更新
+      showMobileSheet({
+        title: `500mメッシュ (${p.mesh_code})`,
+        badgeText: p.risk_label || '区分なし',
+        badgeColor: LEVEL_COLORS[p.gap_level] || '#2563eb',
+        elderly: `${p.elderly.toLocaleString()} 人`,
+        mgs: p.gap_score.toLocaleString(),
+        station: p.station_name ? `${p.station_name}駅 (${p.d_station}m)` : `${p.d_station}m`,
+        bus: p.bus_name ? `${p.bus_name} (${p.d_bus}m)` : `${p.d_bus}m`
+      });
     }
 
     // バス停詳細表示（バス停マーカークリック時）
@@ -633,6 +1073,16 @@
         ・情報ソース: <span style="color:#2563eb; font-weight:600;">${p.data_source}</span><br>
         <span style="color:#64748b; font-size:0.68rem;">${p.remarks || ''}</span>
       `;
+
+      showMobileSheet({
+        title: `🚏 ${p.stop_name}`,
+        badgeText: p.service_level || 'バス停',
+        badgeColor: '#3b82f6',
+        elderly: `${p.operator}`,
+        mgs: `F=${p.freq_penalty}倍`,
+        station: `約${p.daytime_freq}本/時`,
+        bus: `${p.headway_min}分間隔`
+      });
     }
 
     // 駅詳細表示（駅マーカークリック時）
@@ -665,6 +1115,16 @@
         ・サービス水準: <strong>${p.service_level}</strong><br>
         <span style="color:#64748b; font-size:0.68rem;">${p.remarks || ''}</span>
       `;
+
+      showMobileSheet({
+        title: `🚆 ${p.name}駅`,
+        badgeText: p.service_level || '駅',
+        badgeColor: '#059669',
+        elderly: `${p.operator}`,
+        mgs: `F=${p.freq_penalty}倍`,
+        station: `${p.line}`,
+        bus: `約${p.daytime_freq}本/時`
+      });
     }
 
     // 2. 鉄道駅データの読み込み (愛知県全域 774駅)
@@ -766,6 +1226,16 @@
         ・主な診療科: ${p.departments || '情報なし'}<br>
         <span style="color:#64748b; font-size:0.68rem;">※高齢者の日常通院および急性期受診における基幹インフラ</span>
       `;
+
+      showMobileSheet({
+        title: `${icon} ${p.name}`,
+        badgeText: p.category || '医療機関',
+        badgeColor: isHospital ? '#e11d48' : '#0284c7',
+        elderly: p.category,
+        mgs: isHospital ? '基幹病院' : 'クリニック',
+        station: '医療インフラ',
+        bus: p.departments ? p.departments.substring(0, 14) + '...' : '一般診療'
+      });
     }
 
     // 商業施設詳細表示（店舗マーカークリック時）
@@ -802,6 +1272,16 @@
         ・ブランド: ${p.brand || '-'}<br>
         <span style="color:#64748b; font-size:0.68rem;">※農林水産省「食料品アクセス問題」評価基準（徒歩1km）対象店舗</span>
       `;
+
+      showMobileSheet({
+        title: `${icon} ${p.name}`,
+        badgeText: p.category || '商業施設',
+        badgeColor: isSm ? '#ea580c' : '#8b5cf6',
+        elderly: p.brand || p.category,
+        mgs: isSm ? 'スーパー' : '薬局',
+        station: '生活インフラ',
+        bus: '徒歩1km基準'
+      });
     }
 
     // 4. サマリー指標の読み込み
@@ -1083,26 +1563,44 @@
     });
     document.getElementById('filter-elderly-dense').addEventListener('change', renderMeshLayer);
 
-    // 凡例 (5段階グラデーション + POI)
+    // 凡例 (5段階グラデーション + POI + レスポンシブ折りたたみ対応)
     const legend = L.control({ position: 'bottomright' });
     legend.onAdd = function() {
       const div = L.DomUtil.create('div', 'legend');
+      // モバイル幅の場合は初期状態で折りたたむ
+      const isMobile = window.innerWidth <= 768;
+      if (isMobile) {
+        div.classList.add('collapsed');
+      }
       div.innerHTML = `
-        <div class="legend-title">Mobility Gap 指数 (MGS)</div>
-        <div class="legend-item"><div class="legend-box" style="background:#dc2626;"></div> 深刻・最優先 (MGS ≥ 4,000)</div>
-        <div class="legend-item"><div class="legend-box" style="background:#f97316;"></div> 交通空白 (1,500 ≤ MGS < 4,000)</div>
-        <div class="legend-item"><div class="legend-box" style="background:#eab308;"></div> 注意・不便 (600 ≤ MGS < 1,500)</div>
-        <div class="legend-item"><div class="legend-box" style="background:#22c55e;"></div> 良好・軽微 (200 ≤ MGS < 600)</div>
-        <div class="legend-item"><div class="legend-box" style="background:#2563eb;"></div> 極めて良好 (MGS < 200)</div>
-        <div style="border-top:1px solid #e2e8f0; margin:5px 0;"></div>
-        <div class="legend-title" style="font-size:0.7rem; color:#64748b;">公共交通 & 生活POI</div>
-        <div class="legend-item"><div class="legend-box" style="background:#059669; border-radius:50%;"></div> 🚆 鉄道駅 (800m圏)</div>
-        <div class="legend-item"><div class="legend-box" style="background:#2563eb; border-radius:50%;"></div> 🚏 バス停 (400m圏)</div>
-        <div class="legend-item"><div class="legend-box" style="background:#e11d48; border-radius:50%;"></div> 🏥 総合病院 (321施設)</div>
-        <div class="legend-item"><div class="legend-box" style="background:#0284c7; border-radius:50%;"></div> 🩺 診療所 (5,540施設)</div>
-        <div class="legend-item"><div class="legend-box" style="background:#ea580c; border-radius:50%;"></div> 🛒 スーパー (1,000m圏)</div>
-        <div class="legend-item"><div class="legend-box" style="background:#9333ea; border-radius:50%;"></div> 💊 ドラッグストア</div>
+        <div class="legend-header" id="legend-header" title="タップして凡例を開閉">
+          <div class="legend-title" style="margin: 0; border: none; padding: 0;">凡例 / MGS指数</div>
+          <button class="legend-toggle-btn" id="legend-toggle" aria-label="凡例開閉">${isMobile ? '▲' : '▼'}</button>
+        </div>
+        <div class="legend-body" id="legend-body">
+          <div class="legend-item"><div class="legend-box" style="background:#dc2626;"></div> 深刻・最優先 (MGS ≥ 4,000)</div>
+          <div class="legend-item"><div class="legend-box" style="background:#f97316;"></div> 交通空白 (1,500 ≤ MGS < 4,000)</div>
+          <div class="legend-item"><div class="legend-box" style="background:#eab308;"></div> 注意・不便 (600 ≤ MGS < 1,500)</div>
+          <div class="legend-item"><div class="legend-box" style="background:#22c55e;"></div> 良好・軽微 (200 ≤ MGS < 600)</div>
+          <div class="legend-item"><div class="legend-box" style="background:#2563eb;"></div> 極めて良好 (MGS < 200)</div>
+          <div style="border-top:1px solid #e2e8f0; margin:5px 0;"></div>
+          <div class="legend-title" style="font-size:0.7rem; color:#64748b;">公共交通 & 生活POI</div>
+          <div class="legend-item"><div class="legend-box" style="background:#059669; border-radius:50%;"></div> 🚆 鉄道駅 (800m圏)</div>
+          <div class="legend-item"><div class="legend-box" style="background:#2563eb; border-radius:50%;"></div> 🚏 バス停 (400m圏)</div>
+          <div class="legend-item"><div class="legend-box" style="background:#e11d48; border-radius:50%;"></div> 🏥 総合病院 (321施設)</div>
+          <div class="legend-item"><div class="legend-box" style="background:#0284c7; border-radius:50%;"></div> 🩺 診療所 (5,540施設)</div>
+          <div class="legend-item"><div class="legend-box" style="background:#ea580c; border-radius:50%;"></div> 🛒 スーパー (1,000m圏)</div>
+          <div class="legend-item"><div class="legend-box" style="background:#9333ea; border-radius:50%;"></div> 💊 ドラッグストア</div>
+        </div>
       `;
+      L.DomEvent.disableClickPropagation(div);
+      const header = div.querySelector('#legend-header');
+      const toggleBtn = div.querySelector('#legend-toggle');
+      header.addEventListener('click', (e) => {
+        e.stopPropagation();
+        div.classList.toggle('collapsed');
+        toggleBtn.textContent = div.classList.contains('collapsed') ? '▲' : '▼';
+      });
       return div;
     };
     legend.addTo(map);
