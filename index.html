@@ -252,49 +252,228 @@
       display: none;
       align-items: center;
       justify-content: space-between;
-      height: 54px;
-      padding: 0 14px;
+      height: 50px;
+      padding: 0 10px;
       background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%);
       color: #ffffff;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-      z-index: 1100;
-      flex-shrink: 0;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      z-index: 2500;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      width: 100%;
     }
     .mobile-brand {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
+      overflow: hidden;
     }
     .mobile-logo {
-      font-size: 1.25rem;
+      font-size: 1.2rem;
+      flex-shrink: 0;
     }
     .mobile-title {
-      font-size: 0.96rem;
+      font-size: 0.92rem;
       font-weight: 700;
       letter-spacing: -0.01em;
       line-height: 1.15;
+      white-space: nowrap;
     }
     .mobile-subtitle {
-      font-size: 0.64rem;
+      font-size: 0.6rem;
       color: #93c5fd;
       line-height: 1.15;
+      white-space: nowrap;
     }
-    .mobile-menu-btn {
+    .mobile-actions {
       display: flex;
       align-items: center;
-      gap: 6px;
-      padding: 7px 12px;
+      gap: 5px;
+      flex-shrink: 0;
+    }
+    .mobile-btn {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 5px 9px;
       background: rgba(255, 255, 255, 0.16);
       border: 1px solid rgba(255, 255, 255, 0.28);
       border-radius: 6px;
       color: #ffffff;
-      font-size: 0.78rem;
+      font-size: 0.72rem;
       font-weight: 600;
       cursor: pointer;
-      transition: background 0.2s;
+      white-space: nowrap;
+      transition: all 0.2s;
     }
-    .mobile-menu-btn:active {
-      background: rgba(255, 255, 255, 0.28);
+    .mobile-btn.primary {
+      background: #2563eb;
+      border-color: #3b82f6;
+    }
+    .mobile-btn:active {
+      filter: brightness(1.2);
+      transform: scale(0.96);
+    }
+
+    /* モバイル専用FAB（フローティングアクションボタン群） */
+    #mobile-fab-bar {
+      display: none;
+      position: fixed;
+      top: 60px;
+      right: 10px;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 1500;
+    }
+    .fab-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+      color: #1e293b;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      padding: 0;
+    }
+    .fab-btn:active {
+      transform: scale(0.92);
+      background: #f1f5f9;
+    }
+    .fab-icon {
+      font-size: 1rem;
+      line-height: 1;
+    }
+    .fab-label {
+      font-size: 0.55rem;
+      font-weight: 700;
+      color: #475569;
+      margin-top: 1px;
+    }
+
+    /* 汎用モーダル・シート用バックドロップ */
+    #legend-modal-backdrop {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(15, 23, 42, 0.55);
+      backdrop-filter: blur(3px);
+      -webkit-backdrop-filter: blur(3px);
+      z-index: 2600;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+      pointer-events: none;
+    }
+    #legend-modal-backdrop.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* モバイル用リッチ凡例モーダル */
+    #legend-modal {
+      display: none;
+      position: fixed;
+      left: 12px;
+      right: 12px;
+      bottom: 16px;
+      max-height: 80vh;
+      overflow-y: auto;
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
+      z-index: 2700;
+      padding: 16px;
+      transform: translateY(120%);
+      transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    #legend-modal.active {
+      transform: translateY(0);
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 10px;
+      margin-bottom: 12px;
+    }
+    .modal-title {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .modal-close-btn {
+      background: #f1f5f9;
+      border: none;
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      color: #475569;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+    .modal-close-btn:active {
+      background: #e2e8f0;
+    }
+    .legend-modal-section {
+      margin-bottom: 12px;
+    }
+    .legend-modal-sec-title {
+      font-size: 0.74rem;
+      font-weight: 700;
+      color: #475569;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .legend-bar-container {
+      display: flex;
+      height: 12px;
+      border-radius: 6px;
+      overflow: hidden;
+      margin-bottom: 8px;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.15);
+    }
+    .legend-bar-seg {
+      flex: 1;
+      height: 100%;
+    }
+    .legend-list-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 6px;
+    }
+    .legend-list-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 8px;
+      background: #f8fafc;
+      border-radius: 6px;
+      border: 1px solid #e2e8f0;
+      font-size: 0.75rem;
+    }
+    .legend-item-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
     /* サイドバー開閉用閉じるボタン */
@@ -343,8 +522,8 @@
     #mobile-detail-sheet {
       display: none;
       position: fixed;
-      left: 12px;
-      right: 12px;
+      left: 10px;
+      right: 10px;
       bottom: 12px;
       background: rgba(255, 255, 255, 0.98);
       backdrop-filter: blur(8px);
@@ -352,7 +531,7 @@
       border-radius: 12px;
       box-shadow: 0 8px 30px rgba(0, 0, 0, 0.22);
       border: 1px solid #cbd5e1;
-      z-index: 1200;
+      z-index: 2100;
       padding: 10px 14px 12px;
       transform: translateY(140%);
       transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
@@ -439,7 +618,7 @@
       filter: brightness(0.9);
     }
 
-    /* 凡例折りたたみ対応 */
+    /* 凡例折りたたみ対応（デスクトップ） */
     .legend-header {
       display: flex;
       align-items: center;
@@ -468,9 +647,18 @@
     /* ===== モバイルブレークポイント (< 768px) ===== */
     @media (max-width: 768px) {
       body {
+        position: fixed;
+        inset: 0;
+        width: 100vw;
+        height: 100vh;
+        height: 100dvh;
+        overflow: hidden;
         flex-direction: column;
       }
       #mobile-topbar {
+        display: flex;
+      }
+      #mobile-fab-bar {
         display: flex;
       }
       #sidebar {
@@ -481,7 +669,8 @@
         width: 88%;
         max-width: 390px;
         height: 100%;
-        z-index: 2000;
+        height: 100dvh;
+        z-index: 3000;
         transform: translateX(-100%);
         transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
         box-shadow: 4px 0 24px rgba(0,0,0,0.25);
@@ -496,25 +685,27 @@
         display: block;
       }
       #map {
+        position: absolute;
+        top: 50px;
+        bottom: 0;
+        left: 0;
+        right: 0;
         width: 100vw;
-        height: calc(100vh - 54px);
-        flex: 1;
+        height: calc(100% - 50px);
       }
       #mobile-detail-sheet {
         display: block;
       }
 
-      /* 凡例のモバイル調整 */
+      /* モバイルではLeaflet標準の右下凡例を非表示にし、モーダル凡例を主役にする */
       .legend {
-        max-width: 210px;
-        min-width: unset;
-        padding: 6px 10px;
-        font-size: 0.68rem;
-        margin-right: 8px;
-        margin-bottom: 8px;
+        display: none !important;
       }
-      .legend.collapsed .legend-body {
-        display: none;
+      #legend-modal-backdrop {
+        display: block;
+      }
+      #legend-modal {
+        display: block;
       }
       
       /* タッチ操作の向上 */
@@ -552,6 +743,9 @@
       .kpi-grid {
         grid-template-columns: 1fr;
       }
+      .mobile-subtitle {
+        display: none;
+      }
     }
   </style>
 </head>
@@ -565,12 +759,17 @@
       <span class="mobile-logo">🗺️</span>
       <div>
         <div class="mobile-title">Mobility Gap AI</div>
-        <div class="mobile-subtitle">愛知県 移動格差・交通アクセシビリティ分析</div>
+        <div class="mobile-subtitle">愛知県 移動格差・交通アクセシビリティ</div>
       </div>
     </div>
-    <button id="mobile-menu-btn" class="mobile-menu-btn" aria-label="メニューを開く">
-      <span>⚙️ 条件・詳細</span>
-    </button>
+    <div class="mobile-actions">
+      <button id="mobile-legend-btn" class="mobile-btn" aria-label="凡例を開く">
+        📖 凡例
+      </button>
+      <button id="mobile-menu-btn" class="mobile-btn primary" aria-label="メニューを開く">
+        ⚙️ 条件
+      </button>
+    </div>
   </div>
 
   <!-- サイドバー -->
@@ -769,6 +968,133 @@
   <!-- 地図領域 -->
   <div id="map"></div>
 
+  <!-- モバイル用地図スマートツールバー (FAB) -->
+  <div id="mobile-fab-bar">
+    <button id="fab-legend" class="fab-btn" title="凡例を見る" aria-label="凡例">
+      <span class="fab-icon">📖</span>
+      <span class="fab-label">凡例</span>
+    </button>
+    <button id="fab-reset-view" class="fab-btn" title="愛知県全域を表示" aria-label="全域表示">
+      <span class="fab-icon">🎯</span>
+      <span class="fab-label">全域</span>
+    </button>
+    <button id="fab-filter" class="fab-btn" title="絞り込み条件" aria-label="条件">
+      <span class="fab-icon">⚙️</span>
+      <span class="fab-label">条件</span>
+    </button>
+  </div>
+
+  <!-- 凡例モーダル・バックドロップ -->
+  <div id="legend-modal-backdrop"></div>
+
+  <!-- モバイル用リッチ凡例シート -->
+  <div id="legend-modal">
+    <div class="modal-header">
+      <div class="modal-title">
+        <span>📖</span> Mobility Gap 指数 (MGS) と凡例
+      </div>
+      <button id="legend-modal-close" class="modal-close-btn" aria-label="閉じる">✕</button>
+    </div>
+
+    <!-- MGS カラーバー & 深刻度レベル一覧 -->
+    <div class="legend-modal-section">
+      <div class="legend-modal-sec-title">■ 移動格差 (MGS) 5段階深刻度</div>
+      <div class="legend-bar-container">
+        <div class="legend-bar-seg" style="background:#2563eb;"></div>
+        <div class="legend-bar-seg" style="background:#22c55e;"></div>
+        <div class="legend-bar-seg" style="background:#eab308;"></div>
+        <div class="legend-bar-seg" style="background:#f97316;"></div>
+        <div class="legend-bar-seg" style="background:#dc2626;"></div>
+      </div>
+      <div class="legend-list-grid">
+        <div class="legend-list-item">
+          <div class="legend-item-left">
+            <span class="legend-box" style="background:#dc2626;"></span>
+            <strong>深刻・最優先対策</strong>
+          </div>
+          <span style="color:#dc2626; font-weight:700;">MGS ≥ 4,000</span>
+        </div>
+        <div class="legend-list-item">
+          <div class="legend-item-left">
+            <span class="legend-box" style="background:#f97316;"></span>
+            <strong>交通空白 (要改善)</strong>
+          </div>
+          <span style="color:#ea580c; font-weight:700;">1,500 ≤ MGS < 4,000</span>
+        </div>
+        <div class="legend-list-item">
+          <div class="legend-item-left">
+            <span class="legend-box" style="background:#eab308;"></span>
+            <span>注意・不便</span>
+          </div>
+          <span style="color:#ca8a04; font-weight:600;">600 ≤ MGS < 1,500</span>
+        </div>
+        <div class="legend-list-item">
+          <div class="legend-item-left">
+            <span class="legend-box" style="background:#22c55e;"></span>
+            <span>良好・軽微</span>
+          </div>
+          <span style="color:#16a34a; font-weight:600;">200 ≤ MGS < 600</span>
+        </div>
+        <div class="legend-list-item">
+          <div class="legend-item-left">
+            <span class="legend-box" style="background:#2563eb;"></span>
+            <span>極めて良好</span>
+          </div>
+          <span style="color:#2563eb; font-weight:600;">MGS < 200</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 公共交通 & 生活POI一覧 -->
+    <div class="legend-modal-section" style="margin-bottom:0;">
+      <div class="legend-modal-sec-title">■ 公共交通 & 生活利便施設 (POI)</div>
+      <div class="legend-list-grid">
+        <div class="legend-list-item">
+          <div class="legend-item-left">
+            <span class="legend-box" style="background:#059669; border-radius:50%;"></span>
+            <span>🚆 <strong>鉄道駅</strong> (774駅)</span>
+          </div>
+          <span style="color:#64748b; font-size:0.7rem;">徒歩10分 (800m)</span>
+        </div>
+        <div class="legend-list-item">
+          <div class="legend-item-left">
+            <span class="legend-box" style="background:#2563eb; border-radius:50%;"></span>
+            <span>🚏 <strong>バス停留所</strong> (9,121箇所)</span>
+          </div>
+          <span style="color:#64748b; font-size:0.7rem;">徒歩5分 (400m)</span>
+        </div>
+        <div class="legend-list-item">
+          <div class="legend-item-left">
+            <span class="legend-box" style="background:#e11d48; border-radius:50%;"></span>
+            <span>🏥 <strong>総合病院</strong> (321施設)</span>
+          </div>
+          <span style="color:#64748b; font-size:0.7rem;">急性期・中核</span>
+        </div>
+        <div class="legend-list-item">
+          <div class="legend-item-left">
+            <span class="legend-box" style="background:#0284c7; border-radius:50%;"></span>
+            <span>🩺 <strong>診療所・クリニック</strong> (5,540施設)</span>
+          </div>
+          <span style="color:#64748b; font-size:0.7rem;">日常一次診療</span>
+        </div>
+        <div class="legend-list-item">
+          <div class="legend-item-left">
+            <span class="legend-box" style="background:#ea580c; border-radius:50%;"></span>
+            <span>🛒 <strong>スーパーマーケット</strong> (1,105店舗)</span>
+          </div>
+          <span style="color:#64748b; font-size:0.7rem;">徒歩15分 (1km)</span>
+        </div>
+        <div class="legend-list-item">
+          <div class="legend-item-left">
+            <span class="legend-box" style="background:#9333ea; border-radius:50%;"></span>
+            <span>💊 <strong>ドラッグストア</strong> (411店舗)</span>
+          </div>
+          <span style="color:#64748b; font-size:0.7rem;">医薬品・生活用品</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- モバイル用クイック詳細ボトムシート -->
   <div id="mobile-detail-sheet">
     <div class="sheet-header">
@@ -811,9 +1137,19 @@
     const sheetCloseBtn = document.getElementById('sheet-close-btn');
     const sheetOpenDetailBtn = document.getElementById('sheet-open-detail-btn');
 
+    // 凡例モーダル関連
+    const legendModal = document.getElementById('legend-modal');
+    const legendModalBackdrop = document.getElementById('legend-modal-backdrop');
+    const mobileLegendBtn = document.getElementById('mobile-legend-btn');
+    const legendModalClose = document.getElementById('legend-modal-close');
+    const fabLegend = document.getElementById('fab-legend');
+    const fabResetView = document.getElementById('fab-reset-view');
+    const fabFilter = document.getElementById('fab-filter');
+
     function openSidebar() {
       if (sidebar) sidebar.classList.add('open');
       if (backdrop) backdrop.classList.add('active');
+      closeLegendModal();
       setTimeout(() => { if (map) map.invalidateSize(); }, 320);
     }
 
@@ -823,9 +1159,42 @@
       setTimeout(() => { if (map) map.invalidateSize(); }, 320);
     }
 
+    function openLegendModal() {
+      if (legendModal) legendModal.classList.add('active');
+      if (legendModalBackdrop) legendModalBackdrop.classList.add('active');
+      closeSidebar();
+      hideMobileSheet();
+    }
+
+    function closeLegendModal() {
+      if (legendModal) legendModal.classList.remove('active');
+      if (legendModalBackdrop) legendModalBackdrop.classList.remove('active');
+    }
+
     if (mobileMenuBtn) mobileMenuBtn.addEventListener('click', openSidebar);
     if (sidebarCloseBtn) sidebarCloseBtn.addEventListener('click', closeSidebar);
     if (backdrop) backdrop.addEventListener('click', closeSidebar);
+
+    if (mobileLegendBtn) mobileLegendBtn.addEventListener('click', openLegendModal);
+    if (fabLegend) fabLegend.addEventListener('click', openLegendModal);
+    if (legendModalClose) legendModalClose.addEventListener('click', closeLegendModal);
+    if (legendModalBackdrop) legendModalBackdrop.addEventListener('click', closeLegendModal);
+
+    if (fabResetView) {
+      fabResetView.addEventListener('click', () => {
+        if (map) map.setView([35.050, 137.150], 10);
+      });
+    }
+
+    if (fabFilter) {
+      fabFilter.addEventListener('click', () => {
+        openSidebar();
+        const filterSection = document.querySelector('input[name="level-filter"]');
+        if (filterSection) {
+          filterSection.closest('.card').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      });
+    }
 
     function showMobileSheet(info) {
       if (!mobileSheet) return;
@@ -841,6 +1210,7 @@
       document.getElementById('sheet-station').textContent = info.station || '-';
       document.getElementById('sheet-bus').textContent = info.bus || '-';
 
+      closeLegendModal();
       mobileSheet.classList.add('active');
     }
 
@@ -864,9 +1234,10 @@
       preferCanvas: true
     }).setView([35.050, 137.150], 10);
 
-    // 地図背景クリックでモバイルシートを閉じる
+    // 地図背景クリックでモバイルシートや凡例を閉じる
     map.on('click', () => {
       hideMobileSheet();
+      closeLegendModal();
     });
 
     // ウィンドウリサイズ時のLeaflet地図再描画
